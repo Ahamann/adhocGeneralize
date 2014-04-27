@@ -1,1 +1,1 @@
-test
+ad hoc realtime generalization with javascript and java
