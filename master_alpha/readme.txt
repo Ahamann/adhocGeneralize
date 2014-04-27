@@ -1,1 +1,4 @@
-ad hoc realtime generalization with javascript and java
+ad hoc realtime generalization with javascript and java.
+
+
+test
