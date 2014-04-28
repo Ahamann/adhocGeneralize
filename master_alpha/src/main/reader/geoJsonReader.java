@@ -20,9 +20,11 @@ public class geoJsonReader {
 	String sJSON = "";
 	BufferedReader bReader = null;
 	//System.out.println("Working Directory = " + System.getProperty("user.dir"));
-	
+	//C:\\jsonTempFolder\\test.json	
+	//C:\\Users\\Ahamann\\Desktop\\MASTER_Topo\\workspace\\git_repo\\Generalize\\master_alpha\\WebContent\\data\\lakesGeo.json
 	try{
-	FileReader fReader = new FileReader("C:\\Users\\Ahamann\\Desktop\\MASTER_Topo\\workspace\\generalize\\master_alpha\\WebContent\\data\\lakesGeo.json");
+	FileReader fReader = new FileReader("C:\\jsonTempFolder\\test.json");
+	
 	bReader = new BufferedReader(fReader);
 
 	while ((sCurrentLine = bReader.readLine()) != null) {

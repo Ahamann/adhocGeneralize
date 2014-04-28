@@ -34,7 +34,7 @@ public class Tester {
 
 		Factory lab = new Factory("write");
 		//lab.temp();
-		lab.json2polygons();
+		//lab.json2polygons();
 	}
 
 }
