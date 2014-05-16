@@ -1,17 +1,14 @@
 package main.runnable;
-
-
-
-
-
 import java.io.IOException;
-
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
+import main.production.Factory;
 
-import main.controller.Factory;
-import main.reader.geoJsonReader;
-
+/**
+ * Test class to prepare back end data structure
+ * @author Bernd Grafe
+ *
+ */
 public class Tester {
 
 	/**
@@ -22,19 +19,11 @@ public class Tester {
 	 */
 	public static void main(String[] args) throws JsonParseException, JsonMappingException, IOException {
 		
-		//System.out.println("Working Directory = " +
-	    //          System.getProperty("user.dir"));
-		
-		
-		
-		//String json;
-		//json = geoJsonReader.readFile();
-		//System.out.println(json);
-		
 
-		Factory lab = new Factory("write");
-		//lab.temp();
-		//lab.json2polygons();
+		
+		int mode = 1; // read orig, get polygons, write copy
+		Factory lab = new Factory(mode);
+
 	}
 
 }

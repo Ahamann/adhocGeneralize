@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import main.reader.geoJsonReader;
 
 /**
  * Servlet implementation class Servlet
@@ -33,9 +32,8 @@ public class Servlet extends HttpServlet {
 
 		//String id = (String) request.getParameter("id");
 
-		
-		Factory fac = new Factory();
-		String json = fac.getJSON();
+		RequestHandler reqHandler = new RequestHandler(0);  //TODO: 0 - test purposes - changeable via front end
+		String json = reqHandler.getjsonString();			//TODO: getPram: extent, zoom level, operation
 		response.setContentType("text/html");
 		PrintWriter out = response.getWriter();
 	    out.println(json);

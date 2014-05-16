@@ -1,20 +1,22 @@
-package main.reader;
+package main.production.reader;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
-/** 
- * Json File Reader Class 
+/**
+ * static methods to read files (JSON)
+ * @author Bernd Grafe
+ *
  */
-public class geoJsonReader {
+public class GeoJsonReader {
 	
 	
 	/**
 	 * read File
 	 * @return String
 	 */
-	public static String readFile(){
+	public static String readFile(String path){
 		
 	String sCurrentLine;
 	String sJSON = "";
@@ -23,7 +25,7 @@ public class geoJsonReader {
 	//C:\\jsonTempFolder\\test.json	
 	//C:\\Users\\Ahamann\\Desktop\\MASTER_Topo\\workspace\\git_repo\\Generalize\\master_alpha\\WebContent\\data\\lakesGeo.json
 	try{
-	FileReader fReader = new FileReader("C:\\jsonTempFolder\\test.json");
+	FileReader fReader = new FileReader(path);
 	
 	bReader = new BufferedReader(fReader);
 
