@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.vividsolutions.jts.geom.Envelope;
+
 
 /**
  * Servlet implementation class Servlet
@@ -30,14 +32,41 @@ public class Servlet extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-		//String id = (String) request.getParameter("id");
+		String modeString = (String) request.getParameter("mode");
+		int mode = Integer.parseInt(modeString);
+		
+		if ( mode==3){
+			String minxString = (String) request.getParameter("minx");
+			double minx = Double.parseDouble(minxString);
+			String minyString = (String) request.getParameter("miny");
+			double miny = Double.parseDouble(minyString);
+			String maxxString = (String) request.getParameter("maxx");
+			double maxx = Double.parseDouble(maxxString);
+			String maxyString = (String) request.getParameter("maxy");
+			double maxy = Double.parseDouble(maxyString);
+			Envelope env = new Envelope(minx,maxx,miny,maxy);
+			RequestHandler reqHandler = new RequestHandler(env);  //1 - all polygons from rtree
+			String json = reqHandler.getjsonString();
+			response.setContentType("text/html");
+			PrintWriter out = response.getWriter();
+		    out.println(json);
+		}else {
+			
+			
+			//RequestHandler reqHandler = new RequestHandler(0);  //TODO: 0 - test purposes - changeable via front end
+			//String json = reqHandler.getjsonString();			//TODO: getPram: extent, zoom level, operation
+			
+			RequestHandler reqHandler = new RequestHandler(2);  //1 - all polygons from rtree
+			String json = reqHandler.getjsonString();			//2 - polygons based on envelope
+			
+			response.setContentType("text/html");
+			PrintWriter out = response.getWriter();
+		    out.println(json);
+		}	
+			
+		}
 
-		RequestHandler reqHandler = new RequestHandler(0);  //TODO: 0 - test purposes - changeable via front end
-		String json = reqHandler.getjsonString();			//TODO: getPram: extent, zoom level, operation
-		response.setContentType("text/html");
-		PrintWriter out = response.getWriter();
-	    out.println(json);
-	}
+		
 
 	/**
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)

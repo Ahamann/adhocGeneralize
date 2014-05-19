@@ -21,7 +21,7 @@ public class Factory {
 	Polygon[] jsonPolygons;
 	String name = "water";
 	String type = "FeatureCollection";
-	Integer mode = 0;
+	//Integer mode = 0;
 	
 	String pathCopy = "C:\\jsonTempFolder\\test.json";	
 	String pathOrig = "C:\\Users\\Ahamann\\Desktop\\MASTER_Topo\\workspace\\git_repo\\Generalize\\master_alpha\\WebContent\\data\\lakesGeo.json";
@@ -35,24 +35,26 @@ public class Factory {
 	 * @throws JsonMappingException 
 	 * @throws JsonParseException 
 	 */
-	public Factory (Integer mode) throws JsonParseException, JsonMappingException, IOException{	
-		this.mode=mode;
+	public Factory (int mode) throws JsonParseException, JsonMappingException, IOException{	
+		//this.mode=mode;
 		//only for test purposes
 		switch(mode){
 		case 0: //read original JSON File and Create Polygons
-			System.out.println("read file");
+			System.out.println("Mode "+mode + " read file");
 			jsonString = readFile();
 			System.out.println("json 2 polygon");
 			json2polygons();
 			System.out.println("done");
+			break;
 		case 1: //read original JSON File,Create Polygons, write into new JSON File 1:1
-			System.out.println("read file");
+			System.out.println("Mode "+mode + " read filefffff");
 			jsonString = readFile();
 			System.out.println("json 2 polygon");
 			json2polygons();
 			System.out.println("polygon 2 json");
 			generateJsonFile();	
 			System.out.println("done");
+			break;
 		}
 		
 	}

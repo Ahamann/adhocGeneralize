@@ -17,6 +17,7 @@ public class GeoJsonReader {
 	 * @return String
 	 */
 	public static String readFile(String path){
+	//System.out.println("path : " + path);
 		
 	String sCurrentLine;
 	String sJSON = "";
