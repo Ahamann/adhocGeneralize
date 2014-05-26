@@ -1,11 +1,16 @@
 package main.production;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
@@ -66,6 +71,28 @@ public class PolygonWorker {
 			jsonPolygons[i] = tempPoly;
 		}
 		return jsonPolygons;
+	}
+	
+	
+	/**
+	 * select polygon based on extent area
+	 * @param polygons
+	 * @param env
+	 * @return
+	 */
+	public static List<Polygon> useSelection(Polygon[] polygons, Envelope env){
+		List<Polygon>  polygonList= new ArrayList<Polygon>();
+		double height = env.getHeight();
+		double width = env.getWidth();
+		double area = height*width;
+		double threshold = area/100*0.005 ; //threshold to deselect
+
+		for(int i=0; i<polygons.length;i++){
+			System.out.println(threshold +"    " + polygons[i].getArea());
+			if(polygons[i].getArea()>threshold) polygonList.add(polygons[i]);
+		}
+
+		return polygonList;
 	}
 	
 }

@@ -35,17 +35,17 @@ public class Servlet extends HttpServlet {
 		String maxxString = (String) request.getParameter("maxx");
 		String maxyString = (String) request.getParameter("maxy");
 				
-		if ( modeString.equals("0")){
+		//if ( modeString.equals("0")){
 			String json = RequestHandler.getJson(modeString, minxString, minyString, maxxString, maxyString);
 			response.setContentType("text/html");
 			PrintWriter out = response.getWriter();
 		    out.println(json);
-		}else {
-			String json = RequestHandler.getJson();
-			response.setContentType("text/html");
-			PrintWriter out = response.getWriter();
-			out.println(json);
-		}	
+		//}else {
+		//	String json = RequestHandler.getJson();
+		//	response.setContentType("text/html");
+		//	PrintWriter out = response.getWriter();
+		//	out.println(json);
+		//}	
 			
 		}
 

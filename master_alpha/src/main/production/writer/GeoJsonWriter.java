@@ -4,9 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.List;
+
 import org.codehaus.jackson.JsonEncoding;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
+
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Polygon;
 
@@ -76,6 +79,10 @@ public class GeoJsonWriter {
 
 	}
 	
+	
+
+	
+	
 	/**
 	 * writes Json File for 1 Polygon (used for RTree - 1 polygon/1 node/ 1 file)
 	 * 
@@ -134,8 +141,28 @@ public class GeoJsonWriter {
 	}
 	
 	
+	
 	/**
-	 * returns json String for given polygons
+	 * returns json String for given polygon list
+	 * @param jsonPolygons
+	 * @param name
+	 * @param type
+	 * @return
+	 * @throws IOException
+	 */
+	public static String getJsonString(List<Polygon> jsonPolygons, String name, String type) throws IOException{
+		Polygon[] array = jsonPolygons.toArray(new Polygon[jsonPolygons.size()]);
+		return getJsonString(array, name, type);
+	}
+	
+	
+	
+	
+	
+	
+	
+	/**
+	 * returns json String for given polygon array
 	 * @param jsonPolygons
 	 * @param name
 	 * @param type

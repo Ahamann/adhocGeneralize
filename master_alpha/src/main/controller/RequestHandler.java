@@ -6,6 +6,7 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 
 import main.production.Factory;
+import main.production.PolygonWorker;
 import main.production.TreeWorker;
 import main.production.writer.GeoJsonWriter;
 import main.save.Container;
@@ -77,27 +78,32 @@ public class RequestHandler {
 			
 		}
 		Envelope env = new Envelope(minx,maxx,miny,maxy);
-		
 		String jsonString = "";	
+		//get TreeWorker - just 1 for test
+		List<TreeWorker> list = Container.getsavedTrees();
+		if(list.size()==0){
+			String pathOrig = Container.pathOrig;
+			String pathFolder = Container.pathFolder;
+			String name = Container.name;
+			String type = Container.type;
+			//create Tree
+			Factory.createTree(0, pathOrig, pathFolder, name, type);
+			list = Container.getsavedTrees();
+		}
+		TreeWorker treeW = list.get(0);
+		System.out.println(mode);
+		//switch between generalization modes
 		switch(mode){
 		case 0:
-			//normal request - get polygons based on extent
-			List<TreeWorker> list = Container.getsavedTrees();
-			
-			
-			if(list.size()==0){
-				String pathOrig = Container.pathOrig;
-				String pathFolder = Container.pathFolder;
-				String name = Container.name;
-				String type = Container.type;
-				//create Tree
-				Factory.createTree(0, pathOrig, pathFolder, name, type);
-				list = Container.getsavedTrees();
-			}
-			
-			TreeWorker treeW = list.get(0);
+			//normal request - get polygons based on extent	
 			Polygon[] polys = treeW.getPolygons(env);
 			jsonString= GeoJsonWriter.getJsonString(polys, treeW.getName(), treeW.getType());
+			break;
+		case 1:
+			//SELECTION
+			Polygon[] arrayPoly = treeW.getPolygons(env);
+			List<Polygon> listPoly = PolygonWorker.useSelection(arrayPoly, env);
+			jsonString= GeoJsonWriter.getJsonString(listPoly, treeW.getName(), treeW.getType());
 			break;
 		}
 		return jsonString;	

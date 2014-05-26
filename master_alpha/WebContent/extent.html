@@ -72,12 +72,12 @@ map.on('zoomend', dragMap);
 var jsonObject;
 var jsonLayer;
 
-var mode=0;
+var mode=1;
 
 //first request to get json
-requester.dataBaseRequest(mode, -180, -180, 180, 180, function(data) { 
+requester.dataBaseRequest(mode, 4.9,  45.9, 5.3,  46.2, function(data) { 
 		jsonObject = requester.getJSON(data);					
-		console.log("hm:" + jsonObject.name);
+		//console.log("hm:" + jsonObject.name);
 
 		var myStyle = {
 			"fill": "blue",
@@ -113,7 +113,7 @@ function dragMap(){
 	var miny =minll.lat; 
 	var maxx =maxll.lng;
 	var maxy =maxll.lat; 
-	updateMap(0, minx, miny, maxx, maxy);
+	updateMap(mode, minx, miny, maxx, maxy);
 	//alert(msg);
 }
 
