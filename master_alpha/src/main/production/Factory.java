@@ -1,148 +1,77 @@
 package main.production;
 
-
 import java.io.IOException;
-import main.production.reader.GeoJsonReader;
-import main.production.writer.GeoJsonWriter;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
-import com.vividsolutions.jts.geom.*;
+
+
 
 
 /**
- * Factory Class - used for back end operations. read polygons from original json file to create r-tree structure.
- * Here should be everything to prepare data structure
+ * Factory Class - depending on mode, create trees and save them to container
+ * This class is supposed to prepare the data before a request can appear
  * @author Bernd Grafe
  *
  */
 public class Factory {
 
-	String jsonString = "";
-	Polygon[] jsonPolygons;
-	String name = "water";
-	String type = "FeatureCollection";
-	//Integer mode = 0;
-	
-	String pathCopy = "C:\\jsonTempFolder\\test.json";	
-	String pathOrig = "C:\\Users\\Ahamann\\Desktop\\MASTER_Topo\\workspace\\git_repo\\Generalize\\master_alpha\\WebContent\\data\\lakesGeo.json";
-	//TODO: path need to be changeable 
-	
-	
-	//////////////CONSTRUCTER//////////////
+
 	/**
-	 * Constructor - TEST read file, convert, write file
-	 * @throws IOException 
-	 * @throws JsonMappingException 
-	 * @throws JsonParseException 
+	 * create a single TreeWorker depending on mode - 0=normal
+	 * @param mode
+	 * @param path
+	 * @param folder
+	 * @param name
+	 * @param type
 	 */
-	public Factory (int mode) throws JsonParseException, JsonMappingException, IOException{	
-		//this.mode=mode;
-		//only for test purposes
+	public static void createTree(int mode, String path, String folder, String name, String type){
+		String[] paths = {path};
+		String[] folders = {folder};
+		String[] names = {name};
+		createTree(mode, paths, folders, names, type);
+	}
+	
+	/**
+	 * create several TreeWorker
+	 * @param mode
+	 * @param paths
+	 * @param folders
+	 * @param names
+	 * @param type
+	 */
+	public static void createTree(int mode, String[] paths, String[] folders, String[] names, String type){
+		if(paths.length!=folders.length || paths.length!=names.length  )return;
 		switch(mode){
-		case 0: //read original JSON File and Create Polygons
-			System.out.println("Mode "+mode + " read file");
-			jsonString = readFile();
-			System.out.println("json 2 polygon");
-			json2polygons();
-			System.out.println("done");
+		//normal mode - create TreeWorker with jsonTree and save it in container
+		case 0:
+			addTrees(paths, folders, names, type);
 			break;
-		case 1: //read original JSON File,Create Polygons, write into new JSON File 1:1
-			System.out.println("Mode "+mode + " read filefffff");
-			jsonString = readFile();
-			System.out.println("json 2 polygon");
-			json2polygons();
-			System.out.println("polygon 2 json");
-			generateJsonFile();	
-			System.out.println("done");
-			break;
+
+		}
+	}
+
+	/**
+	 * create and add TreeWorker to container
+	 * @param paths
+	 * @param folders
+	 * @param name
+	 * @param type
+	 */
+	private static void addTrees(String[] paths, String[] folders, String[] name, String type){
+
+		for(int i=0;i<paths.length;i++){
+			try {
+				@SuppressWarnings("unused")
+				TreeWorker tree = new TreeWorker( paths[i],  folders[i],  name[i],  type, true, true);//save=true ,it saves itself
+			} catch (IOException e) {
+				System.out.println("Couldnt create TreeWorker for i="+i +" with:");
+				e.printStackTrace();
+			}
 		}
 		
-	}
-	/**
-	 * Constructor - empty Constructor to orchestrate methods by yourself
-	 * @throws IOException 
-	 * @throws JsonMappingException 
-	 * @throws JsonParseException 
-	 */
-	public Factory () throws JsonParseException, JsonMappingException, IOException{	
-	}
-	
-	
-	//////////////METHOD SECTION//////////////
-	/**
-	 * reads json file and saves polygons
-	 * json node -> feature node -> coord values -> Coordinate -> Coordinate[] -> LinearRing -> Polygon -> Polygon[]
-	 * 
-	 * @throws JsonParseException
-	 * @throws JsonMappingException
-	 * @throws IOException
-	 */
-	public void json2polygons() throws JsonParseException, JsonMappingException, IOException{
 		
-		jsonPolygons = PolygonWorker.json2polygons(jsonString);
+		
 		
 	}
-		
 	
-	//////////////Reader/Writer//////////////
-	/**
-	 * returns JSON for given path
-	 * @return
-	 */
-	public String readFile(){
-		String jsonFile = GeoJsonReader.readFile(pathOrig);		
-		return jsonFile;
-	}
 	
-	/**
-	 * calls method to write JSON File based on given Polygons
-	 * @throws IOException
-	 */
-	public void generateJsonFile() throws IOException{			
-		GeoJsonWriter.writeJson(jsonPolygons, pathCopy, name, type);
-	}
-	
-	//TODO: with r-tree - input= folder with original file, everything else will be automatically
-	
-	//////////////GETTERS//////////////
-	/**
-	 * returns json string
-	 * @return
-	 */
-	public String getJSON(){
-		return jsonString;
-	}
-	/**
-	 * returns polygons created from json
-	 * @return
-	 */
-	public Polygon[] getPolygons(){
-		return jsonPolygons;
-	}
-	/**
-	 * returns name/category of features
-	 * @return
-	 */
-	public String getName(){
-		return name;
-	}
-	/**
-	 * sets name/category of features
-	 * @return
-	 */
-	public String getType(){
-		return type;
-	}
-	//////////////GETTERS//////////////
-	public void  setName(String name){
-		this.name = name;
-	}
-	/**
-	 * sets name/category of features
-	 * @return
-	 */
-	public void setType(String type){
-		this.type = type;
-	}
 		
 }

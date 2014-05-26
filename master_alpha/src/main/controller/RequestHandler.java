@@ -1,9 +1,14 @@
 package main.controller;
-
 import java.io.IOException;
+import java.util.List;
 
-import main.production.RTreeWorker;
-import main.production.reader.GeoJsonReader;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+
+import main.production.Factory;
+import main.production.TreeWorker;
+import main.production.writer.GeoJsonWriter;
+import main.save.Container;
 
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Polygon;
@@ -16,68 +21,85 @@ import com.vividsolutions.jts.geom.Polygon;
  */
 public class RequestHandler {
 
-	String jsonString = ""; //is send to front end
-	Polygon[] jsonPolygons; //intern usage for operations
-	Integer operationMode = 0; 
-	
-	String pathCopy = "C:\\jsonTempFolder\\test.json";	
-	String pathOrig = "C:\\Users\\Ahamann\\Desktop\\MASTER_Topo\\workspace\\git_repo\\Generalize\\master_alpha\\WebContent\\data\\lakesGeo.json";
-	//TODO: path need to be changeable 
-	
-	
-	//////////////CONSTRUCTER//////////////
 	/**
-	 * Constructor based on given mode
-	 * @param mode
-	 * @throws IOException 
-	 */
-	public RequestHandler(Integer mode) throws IOException{
-		this.operationMode = mode;
-		
-		switch(operationMode){
-		case 0: //standard for test - read 1 jsonFile
-			jsonFile2String(pathCopy);
-			break;
-		case 1: //read all polygons from saved r-tree
-			RTreeWorker tree = new RTreeWorker();
-			jsonString = tree.getAllPolygonsFromRTree();
-			break;
-		case 2: //read all polygons from saved r-tree
-			Envelope env = new Envelope(4.50 , 5, 45.98 , 45.985);
-			RTreeWorker treeEnv = new RTreeWorker();
-			jsonString = treeEnv.getPolygonsFromRTree(env);
-			break;
-
-		}
-	}
-	
-	/**
-	 * request based on envelope
-	 * @param env
-	 * @throws IOException
-	 */
-	public RequestHandler(Envelope env) throws IOException{
-		RTreeWorker treeEnv = new RTreeWorker();
-		jsonString = treeEnv.getPolygonsFromRTree(env);
-	}
-	
-	//////////////METHOD SECTION//////////////
-	/**
-	 * simply read File and save String as jsonString
-	 * @param path
-	 */
-	public void jsonFile2String (String path){
-		jsonString = GeoJsonReader.readFile(path);
-	}
-	
-	//////////////GETTERS//////////////
-	/**
-	 * returns jsonString - operation needed befor call
+	 * get all Polygons
 	 * @return
+	 * @throws IOException 
+	 * @throws JsonMappingException 
+	 * @throws JsonParseException 
 	 */
-	public String getjsonString(){
+	public static String getJson() throws JsonParseException, JsonMappingException, IOException{
+		String jsonString;
+		List<TreeWorker> list = Container.getsavedTrees();
+		
+		
+		if(list.size()==0){
+			String pathOrig = Container.pathOrig;
+			String pathFolder = Container.pathFolder;
+			String name = Container.name;
+			String type = Container.type;
+			//create Tree
+			Factory.createTree(0, pathOrig, pathFolder, name, type);
+			list = Container.getsavedTrees();
+		}
+		
+		TreeWorker treeW = list.get(0);
+		Polygon[] polys = treeW.getPolygons();
+		jsonString= GeoJsonWriter.getJsonString(polys, treeW.getName(), treeW.getType());	
 		return jsonString;
 	}
 	
-	
+	/**
+	 * getPolygons based on extent
+	 * @param modeS
+	 * @param minxS
+	 * @param minyS
+	 * @param maxxS
+	 * @param maxyS
+	 * @return
+	 * @throws IOException 
+	 * @throws JsonMappingException 
+	 * @throws JsonParseException 
+	 */
+	public static String getJson(String modeS, String minxS, String minyS, String maxxS, String maxyS) throws JsonParseException, JsonMappingException, IOException{
+		int mode = Integer.parseInt(modeS);
+		
+		double minx =-180 ;
+		double miny =-180;
+		double maxx =180;
+		double maxy =180;
+		try{
+		 minx = Double.parseDouble(minxS);
+		 miny = Double.parseDouble(minyS);
+		 maxx = Double.parseDouble(maxxS);
+		 maxy = Double.parseDouble(maxyS);
+		}catch(Exception e){
+			
+		}
+		Envelope env = new Envelope(minx,maxx,miny,maxy);
+		
+		String jsonString = "";	
+		switch(mode){
+		case 0:
+			//normal request - get polygons based on extent
+			List<TreeWorker> list = Container.getsavedTrees();
+			
+			
+			if(list.size()==0){
+				String pathOrig = Container.pathOrig;
+				String pathFolder = Container.pathFolder;
+				String name = Container.name;
+				String type = Container.type;
+				//create Tree
+				Factory.createTree(0, pathOrig, pathFolder, name, type);
+				list = Container.getsavedTrees();
+			}
+			
+			TreeWorker treeW = list.get(0);
+			Polygon[] polys = treeW.getPolygons(env);
+			jsonString= GeoJsonWriter.getJsonString(polys, treeW.getName(), treeW.getType());
+			break;
+		}
+		return jsonString;	
+	}
 }

@@ -3,19 +3,7 @@ var geoJSON;
 /**
  * Method to call requestController servlet and get json string.
  */
-requester.dataBaseRequest = function(mode, callback) {	 
-	$.ajax({
-		"url" : 'mainServlet',
-		"type" : 'GET',
-		"data" : {
-			"mode" : mode,		
-		}, "success" : function(data,status) { 
-			return callback(data);
-		}
-	});
-};
-
-requester.dataBaseRequestUpdate = function(mode, minx, miny, maxx, maxy, callback) {	 
+requester.dataBaseRequest = function(mode, minx, miny, maxx, maxy, callback) {	 
 	$.ajax({
 		"url" : 'mainServlet',
 		"type" : 'GET',

@@ -72,10 +72,10 @@ map.on('zoomend', dragMap);
 var jsonObject;
 var jsonLayer;
 
-var mode=2;
+var mode=0;
 
 //first request to get json
-requester.dataBaseRequest(mode, function(data) { 
+requester.dataBaseRequest(mode, -180, -180, 180, 180, function(data) { 
 		jsonObject = requester.getJSON(data);					
 		console.log("hm:" + jsonObject.name);
 
@@ -87,7 +87,11 @@ requester.dataBaseRequest(mode, function(data) {
 			};												//overwritten by path (styles)
 
 		jsonLayer = L.geoJson(jsonObject, {
-			style: myStyle	
+			onEachFeature: function (feature, layer) {
+		        //layer.bindPopup(feature.geometry.type);
+				layer.bindPopup(feature.properties.envelope);
+		      }
+			//style: myStyle	
 		}).addTo(map);
 	//	var testLayers = {"test": jsonLayer};	
 	//	L.control.layers(testLayers).addTo(map);
@@ -109,13 +113,13 @@ function dragMap(){
 	var miny =minll.lat; 
 	var maxx =maxll.lng;
 	var maxy =maxll.lat; 
-	updateMap(3, minx, miny, maxx, maxy);
+	updateMap(0, minx, miny, maxx, maxy);
 	//alert(msg);
 }
 
 function updateMap(mode, minx, miny, maxx, maxy){
 	
-	requester.dataBaseRequestUpdate(mode, minx, miny, maxx, maxy, function(data) { 
+	requester.dataBaseRequest(mode, minx, miny, maxx, maxy, function(data) { 
 		jsonObject = requester.getJSON(data);					
 		var myStyle = {
 				"fill": "green",
@@ -125,7 +129,11 @@ function updateMap(mode, minx, miny, maxx, maxy){
 				};	
 		 map.removeLayer(jsonLayer);
 		jsonLayer = L.geoJson(jsonObject, {
-			style: myStyle	
+			onEachFeature: function (feature, layer) {
+		        //layer.bindPopup(feature.geometry.type);
+				layer.bindPopup(feature.properties.envelope);
+		      }
+			//style: myStyle	
 		}).addTo(map);
 
 		//var bounds = d3.geo.bounds(jsonObject);
