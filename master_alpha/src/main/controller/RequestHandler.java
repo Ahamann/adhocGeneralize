@@ -101,9 +101,14 @@ public class RequestHandler {
 			break;
 		case 1:
 			//SELECTION
-			Polygon[] arrayPoly = treeW.getPolygons(env);
-			List<Polygon> listPoly = PolygonWorker.useSelection(arrayPoly, env);
-			jsonString= GeoJsonWriter.getJsonString(listPoly, treeW.getName(), treeW.getType());
+			Polygon[] arrayPoly1 = treeW.getPolygons(env);
+			List<Polygon> listPoly1 = PolygonWorker.useSelection(arrayPoly1, env);
+			jsonString= GeoJsonWriter.getJsonString(listPoly1, treeW.getName(), treeW.getType());
+			break;
+		case 2:
+			Polygon[] arrayPoly2 = treeW.getPolygons(env);
+			List<Polygon> listPoly2 = PolygonWorker.useTypification(arrayPoly2, env);
+			jsonString= GeoJsonWriter.getJsonString(listPoly2, treeW.getName(), treeW.getType());
 			break;
 		}
 		return jsonString;	

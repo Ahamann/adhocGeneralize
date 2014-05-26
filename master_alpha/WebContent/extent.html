@@ -72,7 +72,8 @@ map.on('zoomend', dragMap);
 var jsonObject;
 var jsonLayer;
 
-var mode=1;
+var mode=getURLParam("mode");
+if(mode=="")mode=0;
 
 //first request to get json
 requester.dataBaseRequest(mode, 4.9,  45.9, 5.3,  46.2, function(data) { 
@@ -144,6 +145,19 @@ function updateMap(mode, minx, miny, maxx, maxy){
 	
 	
 	
+}
+
+function getURLParam(name) {
+	name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+
+	var regexS = "[\\?&]" + name + "=([^&#]*)";
+	var regex = new RegExp( regexS );
+	var results = regex.exec( window.location.href );
+
+	if ( results == null )
+		return "";
+	else
+		return results[1];
 }
 	
 </script>

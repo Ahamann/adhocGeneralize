@@ -74,6 +74,7 @@ public class TreeWorker {
 			GeoJsonWriter.writeJsonToFile(polygons[i], path, name, type, i);
 			jsonTree.insert(polygons[i].getEnvelopeInternal(), path);
 		}
+		jsonTree.build(); //TODO:is build necessary for RTREE?
 		polygons = null;
 		}
 	

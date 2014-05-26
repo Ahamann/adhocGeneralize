@@ -30,13 +30,13 @@ read file - check
 convert to polygon - check
 write json file - check
 visualization of self created json - check
-
 r- tree (save polygons per file/per extent)- check
-quad tree - 
 selection based on extent/zoom - check 
-selection operator/delete smallest polygons based on extent - 
-typification based on area (nearest neighbors of biggest area - get extent, buffer biggest to extent, delete remaining polygons) - 
+selection operator/delete smallest polygons based on extent - check
+typification based on area (nearest neighbors of biggest area - get extent, buffer biggest to extent, delete remaining polygons) - more or less check
+->Problem - its more like an absorption - sort polygons(area) - get neighbors via extent expansion- delete them, increase polygon
 
+quad tree - 
 simplification douglas-peucker/visvalingam - 
 aggregation/amalgamation, polygons with same outline - 
 aggregation, polygons based on distance - 

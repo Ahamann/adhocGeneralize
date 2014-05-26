@@ -11,9 +11,13 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.index.strtree.GeometryItemDistance;
+import com.vividsolutions.jts.index.strtree.ItemDistance;
+import com.vividsolutions.jts.index.strtree.STRtree;
 
 /**
  * Collection of static Methods to manipulate, read etc. Polygons
@@ -88,11 +92,102 @@ public class PolygonWorker {
 		double threshold = area/100*0.005 ; //threshold to deselect
 
 		for(int i=0; i<polygons.length;i++){
-			System.out.println(threshold +"    " + polygons[i].getArea());
 			if(polygons[i].getArea()>threshold) polygonList.add(polygons[i]);
 		}
 
 		return polygonList;
 	}
 	
+ public static List<Polygon> useTypification(Polygon[] polygons, Envelope env){
+	 	List<Polygon>  polygonList= new ArrayList<Polygon>();
+	 	STRtree tree = new STRtree();
+	 	//sort array
+	 	polygons = bubbleSort(polygons);
+	 	//add array to STRtree
+	 	for (int i = 0; i<polygons.length;i++){
+	 		tree.insert(polygons[i].getEnvelopeInternal(),i); //save indexes to delete them
+	 	}
+	 	
+	 	//nearest neighbour
+	 	//GeometryItemDistance a = new GeometryItemDistance() ;
+	 	//Polygon poly =(Polygon) tree.nearestNeighbour(polygons[0].getEnvelopeInternal(), polygons[0], a);
+ 		//polygonList.add(poly);
+	 	
+	 	GeometryFactory geometryFactory = new GeometryFactory();
+	 	//envelope expansion
+	 	for(int j= 0; j<polygons.length;j++){
+	 		if(polygons[j]!=null){
+	 			//expand
+	 			Envelope envTemp = polygons[j].getEnvelopeInternal();
+	 			double expander = (env.getWidth()+env.getHeight());
+	 			double cornerOld = envTemp.getMaxX();
+	 			envTemp.expandBy(envTemp.getWidth()*expander, envTemp.getHeight()*expander); //get Envelope and expand by 2% to get surrounded polygons
+	 			//search for polygons to delete 
+	 			@SuppressWarnings("unchecked")
+	 			List<Integer> listTemp = tree.query(envTemp);
+	 			//set items to null
+	 			for(int k=0;k<listTemp.size();k++){
+	 				if(listTemp.get(k)!=j){
+	 					polygons[listTemp.get(k)]=null;
+	 				}
+	 			}
+	 			//buffer polygon
+	 			if (listTemp.size()>0){
+	 				double cornerNew = envTemp.getMaxX();
+	 				double distance = (cornerNew-cornerOld)/10;
+	 				Geometry geo = polygons[j].buffer(distance);
+	 				Coordinate[] coords = geo.getCoordinates();
+	 				//CREATE NEW POLYGON
+	 				try{
+	 				LinearRing shell = geometryFactory.createLinearRing(coords);
+	 				Polygon tempPoly = geometryFactory.createPolygon(shell, null);
+	 				polygonList.add(tempPoly);
+	 				//CATCH - reconstruct coordinates if coords arent closed
+	 				}catch(Exception e){
+	 					int length = geo.getCoordinates().length;
+
+	 					Coordinate[] closed = new Coordinate[length+1];
+	 					for(int m=0;m<length;m++){
+	 						closed[m]=geo.getCoordinates()[m];
+	 					}
+	 					closed[closed.length-1]=geo.getCoordinates()[0];
+	 					LinearRing shell = geometryFactory.createLinearRing(closed);
+		 				Polygon tempPoly = geometryFactory.createPolygon(shell, null);
+		 				polygonList.add(tempPoly);
+	 				}
+	 			}
+	 			
+	 			
+	 		}
+	 	}
+	 	
+	 	
+	 	System.out.println("output poly " +polygonList.size());
+	 	return polygonList;	 
+ }
+	
+ 
+ private static Polygon[] bubbleSort(Polygon[] polygons){
+	 Polygon temp;
+		for(int i=1; i<polygons.length; i++) {
+			for(int j=0; j<polygons.length-i; j++) {
+				if(polygons[j].getArea()<polygons[j+1].getArea()) {  //change if biggest or smallest should be "bubbled"
+					temp=polygons[j];
+					polygons[j]=polygons[j+1];
+					polygons[j+1]=temp;
+				}
+				
+			}
+		}
+		return polygons;
+ }
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
 }
