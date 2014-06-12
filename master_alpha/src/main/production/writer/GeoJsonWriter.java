@@ -209,6 +209,10 @@ public class GeoJsonWriter {
 								jsonGenerator.writeNumberField("area",jsonPolygons[i].getArea());
 								jsonGenerator.writeNumberField("length",jsonPolygons[i].getLength());
 								jsonGenerator.writeStringField("envelope",jsonPolygons[i].getEnvelopeInternal().toString());
+								//test purposes
+//								jsonGenerator.writeFieldName("coords");
+//								jsonGenerator.writeStartArray();
+																//end
 								jsonGenerator.writeEndObject(); // "}"
 					jsonGenerator.writeEndObject(); // "}"
 				}

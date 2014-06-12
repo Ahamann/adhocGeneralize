@@ -106,9 +106,16 @@ public class RequestHandler {
 			jsonString= GeoJsonWriter.getJsonString(listPoly1, treeW.getName(), treeW.getType());
 			break;
 		case 2:
+			//Strange Typification 
 			Polygon[] arrayPoly2 = treeW.getPolygons(env);
 			List<Polygon> listPoly2 = PolygonWorker.useTypification(arrayPoly2, env);
 			jsonString= GeoJsonWriter.getJsonString(listPoly2, treeW.getName(), treeW.getType());
+			break;
+		case 3:
+			//Typification - nearest neighbour
+			Polygon[] polyss = treeW.getPolygons(env);
+			jsonString= GeoJsonWriter.getJsonString(polyss, treeW.getName(), treeW.getType());
+			List<Polygon> listPoly3 = PolygonWorker.useNearestNeighborTypification(polyss);
 			break;
 		}
 		return jsonString;	
