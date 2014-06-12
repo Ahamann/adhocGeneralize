@@ -477,7 +477,7 @@ public abstract class AbstractSTRtree implements Serializable {
   private void boundablesAtLevel(int level, AbstractNode top, Collection boundables) {
     Assert.isTrue(level > -2);
     if (top.getLevel() == level) {
-      boundables.add(top);
+      boundables.add(top); 
       return;
     }
     for (Iterator i = top.getChildBoundables().iterator(); i.hasNext(); ) {
