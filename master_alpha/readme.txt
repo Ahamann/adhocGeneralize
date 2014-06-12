@@ -1,23 +1,6 @@
 ad hoc realtime generalization with javascript and java.
 
 
-main.controller
-	Servlet.java
-	RequestHandler.java
-
-main.production
-	Factory.java
-	PolygonWorker.java
-
-main.production.reader
-	GeoJsonReader.java
-	
-main.production.writer
-	GeoJsonWriter.java
-
-main.runnable.java
-	Tester.java
-	
 
 	
 front end:	
@@ -35,6 +18,12 @@ selection based on extent/zoom - check
 selection operator/delete smallest polygons based on extent - check
 typification based on area (nearest neighbors of biggest area - get extent, buffer biggest to extent, delete remaining polygons) - more or less check
 ->Problem - its more like an absorption - sort polygons(area) - get neighbors via extent expansion- delete them, increase polygon
+
+new nearest neighbour - fixed jts classes for proper nN method + remove methode + new replace method for clustering
+only prototype
+
+
+
 
 quad tree - 
 simplification douglas-peucker/visvalingam - 

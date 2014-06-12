@@ -28,7 +28,7 @@ public class Servlet extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-
+System.out.println("huhu");
 		String modeString = (String) request.getParameter("mode");
 		String minxString = (String) request.getParameter("minx");
 		String minyString = (String) request.getParameter("miny");

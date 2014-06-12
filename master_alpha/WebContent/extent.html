@@ -35,7 +35,26 @@
    fill: green;
    fill-opacity: .7;
   }
+/**
+ * Popup
+ */ 
 
+
+.leaflet-popup-content
+{
+	margin: 0;
+	
+											
+word-wrap: break-word;
+height: 100px;
+overflow : auto;
+																	
+					
+}
+.leaflet-div-icon {
+	background: #fff;
+	border: 1px solid #666;
+	}
  </style>
 </head>
 <body>
@@ -94,7 +113,14 @@ requester.dataBaseRequest(mode, 4.9,  45.9, 5.3,  46.2, function(data) {
 		jsonLayer = L.geoJson(jsonObject, {
 			onEachFeature: function (feature, layer) {
 		        //layer.bindPopup(feature.geometry.type);
-				layer.bindPopup(feature.properties.envelope);
+				//layer.bindPopup(feature.properties.envelope);
+				
+				
+				layer.bindPopup("<b>Coordinates:</b> " +feature.geometry.coordinates);
+						
+						
+						
+						
 		      }
 			//style: myStyle	
 		}).addTo(map);
@@ -136,7 +162,7 @@ function updateMap(mode, minx, miny, maxx, maxy){
 		jsonLayer = L.geoJson(jsonObject, {
 			onEachFeature: function (feature, layer) {
 		        //layer.bindPopup(feature.geometry.type);
-				layer.bindPopup(feature.properties.envelope);
+				layer.bindPopup("<b>Coordinates:</b> </br>" + feature.geometry.coordinates);
 		      }
 			//style: myStyle	
 		}).addTo(map);
