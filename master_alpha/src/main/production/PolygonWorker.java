@@ -3,6 +3,9 @@ package main.production;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+
+import main.helper.Watch;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
@@ -14,11 +17,13 @@ import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.strtree.GeometryItemDistance;
 import com.vividsolutions.jts.index.strtree.ItemDistance;
 import com.vividsolutions.jts.index.strtree.STRtree;
-
+import com.vividsolutions.jts.geom.util.AffineTransformation;
+import com.vividsolutions.jts.geom.util.AffineTransformationFactory;
 /**
  * Collection of static Methods to manipulate, read etc. Polygons
  * @author Bernd Grafe
@@ -84,17 +89,42 @@ public class PolygonWorker {
 	 * @param env
 	 * @return
 	 */
-	public static List<Polygon> useSelection(Polygon[] polygons, Envelope env){
+	public static List<Polygon> useSelection(Polygon[] polygons, Envelope env, Integer zoom){
 		List<Polygon>  polygonList= new ArrayList<Polygon>();
+		boolean viaArea = false;
+		System.out.println("tree size: " + polygons.length);
+		if (viaArea){
 		double height = env.getHeight();
 		double width = env.getWidth();
 		double area = height*width;
 		double threshold = area/100*0.005 ; //threshold to deselect
-
 		for(int i=0; i<polygons.length;i++){
 			if(polygons[i].getArea()>threshold) polygonList.add(polygons[i]);
 		}
+		} else {
+			System.out.println("pre selection");
+			double mPerPixel = 156412;
+			 for (int i = 1; i<= zoom; i++){
+				 mPerPixel= mPerPixel/2;
+			 }
 
+			 double pixelLength = mPerPixel*960; //TODO: get real px - strange scale calculation, just use pixelLength for now
+			 int cal = (int) (250 * Math.pow((73318.125)/(pixelLength), 0.1)); //135
+			 if ( cal > 250)cal = 250;  //based on calculation for maximum polygon size (fast transfer rate, explanation above)
+			 //Loop for max amount of polygons	
+			 if( cal < polygons.length){
+			 System.out.println("show only "+cal+" biggest  / sort...");
+			 Polygon[] sortedSmall = bubbleSort(polygons, false);
+			 System.out.println("sort done, add...");
+			 for(int i = sortedSmall.length - cal; i<sortedSmall.length;i++ ){
+				 polygonList.add(sortedSmall[i]);
+			 }
+			 }else {
+				 for(int j = 0; j< polygons.length;j++){
+					 polygonList.add(polygons[j]);
+				 }
+			 }
+		}
 		return polygonList;
 	}
 	
@@ -102,7 +132,7 @@ public class PolygonWorker {
 	 	List<Polygon>  polygonList= new ArrayList<Polygon>();
 	 	STRtree tree = new STRtree();
 	 	//sort array
-	 	polygons = bubbleSort(polygons);
+	 	polygons = bubbleSort(polygons, true);
 	 	//add array to STRtree
 	 	for (int i = 0; i<polygons.length;i++){
 	 		tree.insert(polygons[i].getEnvelopeInternal(),i); //save indexes to delete them
@@ -213,41 +243,107 @@ public class PolygonWorker {
   * @param tree
   * @return
   */
- public static List<Polygon> useNearestNeighborTypification(STRtree tree){
+ @SuppressWarnings("unchecked")
+public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelope env, Integer zoom){
+	 Watch watchTotal = new Watch();
+	 Watch watchnN = new Watch();
+	 watchTotal.start();
 	 List<Polygon>  polygonList= new ArrayList<Polygon>();
-	 
 	 //nearest neighbor - alternative distance matrix
 	 GeometryItemDistance dist = new GeometryItemDistance() ;
 	 
-	 Object[] nearest = tree.nearestNeighbour(dist);
-	 
-	 for (int i = 0; i< nearest.length;i++){
-		 System.out.println("poly"+i+" = " + nearest[i]);
+	 //scale = 1 / length picture / length original --- or just zoomlevel / the bigger the zoomlevel the smaller the scale (16 ~ 1:2500, 14 ~ 1:10000 , 11 ~ 1:100000
+	 //polygons = givenPolygons*SQRT(givenScale/scale)
+	 double mPerPixel = 156412;
+	 for (int i = 1; i<= zoom; i++){
+		 mPerPixel= mPerPixel/2;
 	 }
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
+	 System.out.println(mPerPixel);
+	 double pixelLength = mPerPixel*960; //TODO: get real px - strange scale calculation, just use pixelLength for now
+	 System.out.println(pixelLength);
+//	 double scale =   ( 960 /env.getWidth() ) *100;
+//	 System.out.println(env.getWidth());
+//	 System.out.println(scale);
+	 double cal = 230 * Math.pow((73318.125)/(pixelLength), 0.1); //135
+	 if ( cal > 230)cal = 230;  //based on calculation for maximum polygon size (fast transfer rate, explanation above)
+	 //Loop for max amount of polygons
+	 int remC = 0;
+	 System.out.println("Tree size: "+ tree.size());
+	 System.out.println("reduce to : "+ cal);
+	 while(tree.size()>cal){
+		 watchnN.start();
+		 Object[] nearest = tree.nearestNeighbour(dist);
+		 watchnN.stop();
+		 Polygon a = (Polygon) nearest[0];
+		 Polygon b = (Polygon) nearest[1];
+		//sort polygons based on area
+		 if(a.getArea()<b.getArea()){
+			 Polygon c = b; //temp save biggest
+			 b =  a; // b = smallest
+			 a = c; // a = biggest
+		 }
+		 //cluster a+ b
+		 Polygon newPolygon = clusterPolygons(a,b);
+		 //remove b (smallest)
+		 tree.remove(b.getEnvelopeInternal(), b);
+		 //replace a (biggest) with newPolygon
+		 tree.replace(a.getEnvelopeInternal(), a, newPolygon.getEnvelopeInternal(), newPolygon); 
+		 remC++;
+	 }
+	 System.out.println(remC + " removed");
+	 polygonList = tree.query(env);
+	 //save deleted or replaced polygons to see the difference
+	 watchTotal.stop();
+	 System.out.println("total calc time for typification : "+ watchTotal.getElapsedTime());
+	 System.out.println("time only for nearest neighbour calc: " + watchnN.getTotalElapsedTime());
 	 return polygonList;
  }
  
+ /**
+  * polygon clustering based on centroid and area
+  * @param a
+  * @param b
+  * @return
+  */
+ private static Polygon clusterPolygons(Polygon a, Polygon b){	 
+	
+		 //get ratio
+		 int translationTolerance = 1; // 1 = normal - the bigger the number the bigger the shift of the polygon
+		 double ratio = a.getArea() / b.getArea();
+		 //get centroid - centre of gravity
+		 Point centroidA = a.getCentroid();
+		 Point centroidB = b.getCentroid();
+		 double distX = centroidA.getX()-centroidB.getX(); //dist = distance to new point based on ratio, not only based on mean of 2 centroids
+		 double distY = centroidA.getY()-centroidB.getY();
+		 distX = -distX / 2 / (ratio/translationTolerance);  
+		 distY = -distY / 2 / (ratio/translationTolerance);
+		 //create new Polygon based on biggest polygon, transform polygon with affine transformation
+		 //the difference between centroids (and ratio - so bigger polygons wont move as much as smaller ones) is used to get new position
+		 //set parameters for transformation
+		 Coordinate srcMin = new Coordinate(a.getEnvelopeInternal().getMinX(),a.getEnvelopeInternal().getMinY());
+		 Coordinate srcMax = new Coordinate(a.getEnvelopeInternal().getMaxX(),a.getEnvelopeInternal().getMaxY());
+		 Coordinate srcCentroid = centroidA.getCoordinate();
+		 Coordinate destMin = new Coordinate(srcMin.x+distX,srcMin.y+distY);
+		 Coordinate destMax = new Coordinate(srcMax.x+distX,srcMax.y+distY);
+		 Coordinate destCentroid = new Coordinate(srcCentroid.x+distX,srcCentroid.y+distY);
+		 //set affine transformation with parameters - based on ratio(coming from area differne) and distance(coming from centroid and ratio)
+		 //Min for scale
+		 Coordinate finalMin = new Coordinate( destCentroid.x - (destCentroid.x-destMin.x) - (destCentroid.x-destMin.x)/ratio,  destCentroid.y - (destCentroid.y-destMin.y) - (destCentroid.y-destMin.y)/ratio);
+		 //Max for scale
+		 Coordinate finalMax = new Coordinate( destCentroid.x + (destMax.x-destCentroid.x) + (destMax.x-destCentroid.x)/ratio,  destCentroid.y + (destMax.y-destCentroid.y) + (destMax.y-destCentroid.y)/ratio);
+		 //set at
+		 AffineTransformation at = AffineTransformationFactory.createFromControlVectors(srcMin,srcMax,srcCentroid,finalMin,finalMax,destCentroid);
+		 //tranform and create new Polygon
+		 Polygon newPolygon = 	 (Polygon) at.transform(a);
+	 return newPolygon;
+ }
  
  /**
   * Typification based on nearest neighbor / centre of gravity / area weight / clustering
   * @param polygons
   * @return
   */
- public static List<Polygon> useNearestNeighborTypification(Polygon[] polygons){
+ public static List<Polygon> useNearestNeighborTypification(Polygon[] polygons, Envelope env, Integer zoom){
 	 List<Polygon>  polygonList= new ArrayList<Polygon>();
 	 STRtree tree = new STRtree();
 	 	//add array to STRtree
@@ -255,22 +351,42 @@ public class PolygonWorker {
 	 		tree.insert(polygons[i].getEnvelopeInternal(),polygons[i]); //save indexes to delete them
 	 		
 	 	}
-	 	
-	 	System.out.println(tree.depth()+" "+tree.size());
-	 	polygonList = useNearestNeighborTypification(tree);
+	 	polygonList = useNearestNeighborTypification(tree, env, zoom);
+	 return polygonList;
+ }
+ 
+ /**
+  * Typification based on nearest neighbor / centre of gravity / area weight / clustering
+  * @param polygons
+  * @param env
+  * @param zoom
+  * @return
+  */
+ public static List<Polygon> useNearestNeighborTypification(List<Polygon> polygons, Envelope env, Integer zoom){
+	 List<Polygon>  polygonList= new ArrayList<Polygon>();
+	 Polygon[] array = polygons.toArray(new Polygon[polygons.size()]);
+	 polygonList = useNearestNeighborTypification(array, env, zoom);
 	 return polygonList;
  }
  
  
  
- private static Polygon[] bubbleSort(Polygon[] polygons){
+ private static Polygon[] bubbleSort(Polygon[] polygons, boolean biggestFirst){
 	 Polygon temp;
 		for(int i=1; i<polygons.length; i++) {
 			for(int j=0; j<polygons.length-i; j++) {
+				if (biggestFirst){
 				if(polygons[j].getArea()<polygons[j+1].getArea()) {  //change if biggest or smallest should be "bubbled"
 					temp=polygons[j];
 					polygons[j]=polygons[j+1];
 					polygons[j+1]=temp;
+				}
+				}else{
+					if(polygons[j].getArea()>polygons[j+1].getArea()) {  //change if biggest or smallest should be "bubbled"
+						temp=polygons[j];
+						polygons[j]=polygons[j+1];
+						polygons[j+1]=temp;
+					}	
 				}
 				
 			}
@@ -279,7 +395,25 @@ public class PolygonWorker {
  }
  
  
- 
+ public static List<Polygon> mergeOverlaps (List<Polygon> polygons){
+	 int length = polygons.size();
+	 int intersectC = 0;
+	 System.out.println("check for overlaps - length = "+ length);
+	 for (int i = 0; i<length-1;i++){
+		 for(int j = 0; j<length;j++){
+			 if(i!=j && polygons.get(i).intersects(polygons.get(j))){
+				 intersectC ++;
+				 polygons.set(i,(Polygon) polygons.get(i).union(polygons.get(j)));
+				 polygons.remove(j);
+				 length --;
+				 j--;
+			 }
+		 }
+	 }
+	 System.out.println("intersection ->Union : " +  intersectC);
+	 return polygons;
+	 
+ }
  
  
  

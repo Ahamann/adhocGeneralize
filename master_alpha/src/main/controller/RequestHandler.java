@@ -13,6 +13,7 @@ import main.save.Container;
 
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.index.strtree.STRtree;
 
 /**
  * Class handles front end requests, gets polygons based on extent+zoom level and generalizes them based on chosen operation.
@@ -62,9 +63,9 @@ public class RequestHandler {
 	 * @throws JsonMappingException 
 	 * @throws JsonParseException 
 	 */
-	public static String getJson(String modeS, String minxS, String minyS, String maxxS, String maxyS) throws JsonParseException, JsonMappingException, IOException{
+	public static String getJson(String modeS, String minxS, String minyS, String maxxS, String maxyS, String zoomS) throws JsonParseException, JsonMappingException, IOException{
 		int mode = Integer.parseInt(modeS);
-		
+		int zoom = Integer.parseInt(zoomS);
 		double minx =-180 ;
 		double miny =-180;
 		double maxx =180;
@@ -102,7 +103,7 @@ public class RequestHandler {
 		case 1:
 			//SELECTION
 			Polygon[] arrayPoly1 = treeW.getPolygons(env);
-			List<Polygon> listPoly1 = PolygonWorker.useSelection(arrayPoly1, env);
+			List<Polygon> listPoly1 = PolygonWorker.useSelection(arrayPoly1, env, zoom);
 			jsonString= GeoJsonWriter.getJsonString(listPoly1, treeW.getName(), treeW.getType());
 			break;
 		case 2:
@@ -113,10 +114,17 @@ public class RequestHandler {
 			break;
 		case 3:
 			//Typification - nearest neighbour
-			Polygon[] polyss = treeW.getPolygons(env);
-			jsonString= GeoJsonWriter.getJsonString(polyss, treeW.getName(), treeW.getType());
-			List<Polygon> listPoly3 = PolygonWorker.useNearestNeighborTypification(polyss);
+			STRtree requestTree = treeW.getTree(env);
+			List<Polygon> listPoly3 = PolygonWorker.useNearestNeighborTypification(requestTree, env, zoom);
+			jsonString= GeoJsonWriter.getJsonString(listPoly3, treeW.getName(), treeW.getType());
 			break;
+		case 4:
+			//Typification nN with pre selection
+			Polygon[] arrayPoly4 = treeW.getPolygons(env);
+			List<Polygon> listPoly4 = PolygonWorker.useSelection(arrayPoly4, env, zoom);
+			List<Polygon> listPoly4_2 = PolygonWorker.useNearestNeighborTypification(listPoly4, env, zoom);
+			listPoly4_2 = PolygonWorker.mergeOverlaps(listPoly4_2);
+			jsonString= GeoJsonWriter.getJsonString(listPoly4_2, treeW.getName(), treeW.getType());
 		}
 		return jsonString;	
 	}

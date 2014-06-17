@@ -91,15 +91,24 @@ var mapWidth = map.getSize().x
 map.on('dragend', dragMap);
 map.on('zoomend', dragMap);
 
+L.control.scale().addTo(map);
+
+
 //json Layer
 var jsonObject;
 var jsonLayer;
 
 var mode=getURLParam("mode");
 if(mode=="")mode=0;
+var zoom =  map.getZoom();
+
+console.log(document.getElementById("map").offsetWidth);
 
 //first request to get json
-requester.dataBaseRequest(mode, 4.9,  45.9, 5.3,  46.2, function(data) { 
+requester.dataBaseRequest(mode, 4.9,  45.9, 5.3,  46.2, zoom, function(data) { 
+
+
+	
 		jsonObject = requester.getJSON(data);					
 		//console.log("hm:" + jsonObject.name);
 
@@ -109,7 +118,7 @@ requester.dataBaseRequest(mode, 4.9,  45.9, 5.3,  46.2, function(data) {
 		   "stroke": "#000",
 		   "stroke-width":  "1.5px",
 			};												//overwritten by path (styles)
-
+			
 		jsonLayer = L.geoJson(jsonObject, {
 			onEachFeature: function (feature, layer) {
 		        //layer.bindPopup(feature.geometry.type);
@@ -118,8 +127,7 @@ requester.dataBaseRequest(mode, 4.9,  45.9, 5.3,  46.2, function(data) {
 				
 				layer.bindPopup("<b>Coordinates:</b> " +feature.geometry.coordinates);
 						
-						
-						
+
 						
 		      }
 			//style: myStyle	
@@ -144,13 +152,13 @@ function dragMap(){
 	var miny =minll.lat; 
 	var maxx =maxll.lng;
 	var maxy =maxll.lat; 
-	updateMap(mode, minx, miny, maxx, maxy);
+	zoom =  map.getZoom();
+	updateMap(mode, minx, miny, maxx, maxy,zoom);
 	//alert(msg);
 }
 
-function updateMap(mode, minx, miny, maxx, maxy){
-	
-	requester.dataBaseRequest(mode, minx, miny, maxx, maxy, function(data) { 
+function updateMap(mode, minx, miny, maxx, maxy, zoom){
+	requester.dataBaseRequest(mode, minx, miny, maxx, maxy, zoom, function(data) { 
 		jsonObject = requester.getJSON(data);					
 		var myStyle = {
 				"fill": "green",

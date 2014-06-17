@@ -134,6 +134,7 @@ public class TreeWorker {
 	 */
 	public STRtree getTree(Envelope env) throws JsonParseException, JsonMappingException, IOException{
 		setPolygon(false,env);
+		polygonTree.build();
 		return polygonTree;
 	}
 	
