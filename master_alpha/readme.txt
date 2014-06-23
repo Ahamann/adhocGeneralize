@@ -79,4 +79,6 @@ file saving with group of polygons - not only 1 polygon per file (rtree children
 
 show envelops on map for rtree children - just show some stuff, to see comparison (clustering etc) - open
 
+integrate osm api call to get xml file - xml->json convert - open
+
 get rich - open
