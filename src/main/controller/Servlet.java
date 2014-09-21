@@ -40,10 +40,10 @@ public class Servlet extends HttpServlet {
 		String minyString = (String) request.getParameter("miny");
 		String maxxString = (String) request.getParameter("maxx");
 		String maxyString = (String) request.getParameter("maxy");
-		String zoomString = (String) request.getParameter("zoom");
+		String scaleString = (String) request.getParameter("scale");
 				
 		//if ( modeString.equals("0")){
-			String json = RequestHandler.getJson(modeString, minxString, minyString, maxxString, maxyString, zoomString);
+			String json = RequestHandler.getJson(modeString, minxString, minyString, maxxString, maxyString, scaleString);
 			response.setContentType("text/html");
 			PrintWriter out = response.getWriter();
 		    out.println(json);

@@ -30,7 +30,7 @@ import com.vividsolutions.jts.geom.util.AffineTransformationFactory;
  *
  */
 public class PolygonWorker {
-	
+
 	/**
 	 * reads json strings and returns polygons
 	 * json node -> feature node -> coord values -> Coordinate -> Coordinate[] -> LinearRing -> Polygon -> Polygon[]
@@ -42,7 +42,6 @@ public class PolygonWorker {
 	 * @throws IOException
 	 */
 	public static Polygon[] json2polygons(String jsonString) throws JsonParseException, JsonMappingException, IOException{
-		
 		//String name;
 		Polygon[] jsonPolygons;
 		
@@ -89,45 +88,60 @@ public class PolygonWorker {
 	 * @param env
 	 * @return
 	 */
-	public static List<Polygon> useSelection(Polygon[] polygons, Envelope env, Integer zoom){
+	public static List<Polygon> useSelection(Polygon[] polygons, Envelope env, int maxSelect){
 		List<Polygon>  polygonList= new ArrayList<Polygon>();
-		boolean viaArea = false;
-		System.out.println("tree size: " + polygons.length);
-		if (viaArea){
-		double height = env.getHeight();
-		double width = env.getWidth();
-		double area = height*width;
-		double threshold = area/100*0.005 ; //threshold to deselect
-		for(int i=0; i<polygons.length;i++){
-			if(polygons[i].getArea()>threshold) polygonList.add(polygons[i]);
-		}
-		} else {
-			System.out.println("pre selection");
-			double mPerPixel = 156412;
-			 for (int i = 1; i<= zoom; i++){
-				 mPerPixel= mPerPixel/2;
-			 }
-
-			 double pixelLength = mPerPixel*960; //TODO: get real px - strange scale calculation, just use pixelLength for now
-			 int cal = (int) (250 * Math.pow((73318.125)/(pixelLength), 0.1)); //135
-			 if ( cal > 250)cal = 250;  //based on calculation for maximum polygon size (fast transfer rate, explanation above)
-			 //Loop for max amount of polygons	
-			 if( cal < polygons.length){
-			 System.out.println("show only "+cal+" biggest  / sort...");
-			 Polygon[] sortedSmall = bubbleSort(polygons, false);
-			 System.out.println("sort done, add...");
-			 for(int i = sortedSmall.length - cal; i<sortedSmall.length;i++ ){
-				 polygonList.add(sortedSmall[i]);
-			 }
+//		boolean viaArea = false;
+//		System.out.println("tree size: " + polygons.length);
+//		
+//		if (viaArea){   //TODO: move to new Selector
+//		double height = env.getHeight();
+//		double width = env.getWidth();
+//		double area = height*width;
+//		double threshold = area/100*0.005 ; //threshold to deselect
+//		for(int i=0; i<polygons.length;i++){
+//			if(polygons[i].getArea()>threshold) polygonList.add(polygons[i]);
+//		}
+//		
+//		} else {
+//			System.out.println("pre selection");
+//			double mPerPixel = 156412;
+//			 for (int i = 1; i<= zoom; i++){
+//				 mPerPixel= mPerPixel/2;
+//			 }
+//
+//			 double pixelLength = mPerPixel*960; //TODO: get real px - strange scale calculation, just use pixelLength for now
+//			 int cal = (int) (250 * Math.pow((73318.125)/(pixelLength), 0.1)); //135
+//			 if ( cal > 250)cal = 250;  //based on calculation for maximum polygon size (fast transfer rate, explanation above)
+//			 //Loop for max amount of polygons	
+			 
+		System.out.println("polyLength: "+polygons.length + " /max Polygons : "+ maxSelect);
+		
+		
+			if( maxSelect < polygons.length){
+				System.out.println("show only "+maxSelect+" biggest  / sort...");
+				Polygon[] sortedSmall = bubbleSort(polygons, false);
+				System.out.println("sort done, add...");
+				for(int i = sortedSmall.length - maxSelect; i<sortedSmall.length;i++ ){
+					polygonList.add(sortedSmall[i]);
+				}
 			 }else {
 				 for(int j = 0; j< polygons.length;j++){
 					 polygonList.add(polygons[j]);
 				 }
 			 }
-		}
+		
 		return polygonList;
 	}
 	
+	
+	/**
+	 * bigger gets bigger typification - sort polygons, biggest first - search surroundings for  biggest polygons
+	 * increase (buffer) and delete smaller ones 
+	 * @param polygons
+	 * @param env
+	 * @return
+	 * @deprecated
+	 */
  public static List<Polygon> useTypification(Polygon[] polygons, Envelope env){
 	 	List<Polygon>  polygonList= new ArrayList<Polygon>();
 	 	STRtree tree = new STRtree();
@@ -137,12 +151,10 @@ public class PolygonWorker {
 	 	for (int i = 0; i<polygons.length;i++){
 	 		tree.insert(polygons[i].getEnvelopeInternal(),i); //save indexes to delete them
 	 	}
-	 	
 	 	//nearest neighbour
 	 	//GeometryItemDistance a = new GeometryItemDistance() ;
 	 	//Polygon poly =(Polygon) tree.nearestNeighbour(polygons[0].getEnvelopeInternal(), polygons[0], a);
  		//polygonList.add(poly);
-	 	
 	 	GeometryFactory geometryFactory = new GeometryFactory();
 	 	//envelope expansion
 	 	for(int j= 0; j<polygons.length;j++){
@@ -155,7 +167,7 @@ public class PolygonWorker {
 	 			//search for polygons to delete 
 	 			@SuppressWarnings("unchecked")
 	 			List<Integer> listTemp = tree.query(envTemp);
-	 			//set items to null
+	 			//set items to null - get ids
 	 			for(int k=0;k<listTemp.size();k++){
 	 				if(listTemp.get(k)!=j){
 	 					polygons[listTemp.get(k)]=null;
@@ -186,12 +198,8 @@ public class PolygonWorker {
 		 				polygonList.add(tempPoly);
 	 				}
 	 			}
-	 			
-	 			
 	 		}
-	 	}
-	 	
-	 	
+	 	}	
 	 	System.out.println("output poly " +polygonList.size());
 	 	return polygonList;	 
  }
@@ -203,7 +211,7 @@ public class PolygonWorker {
   * 
   * gprs(54kbps),edge(260kbps).umts(380kbps),hsdpa(>3.2mbps)
   * 
-  * max loading time should be 1-2 sec (reference?)
+  * max loading time should be 5 sec (reference?)
   * 
   * with: x=2sec/8*380kbps -> x=95kbyte [1byte=8bit][sek=kbyte*8/kbps] / 1sec->45kbyte /4sec->190kbyte
   * 
@@ -244,7 +252,7 @@ public class PolygonWorker {
   * @return
   */
  @SuppressWarnings("unchecked")
-public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelope env, Integer zoom){
+public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelope env, Integer maxTyp){
 	 Watch watchTotal = new Watch();
 	 Watch watchnN = new Watch();
 	 watchTotal.start();
@@ -252,25 +260,28 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 	 //nearest neighbor - alternative distance matrix
 	 GeometryItemDistance dist = new GeometryItemDistance() ;
 	 
-	 //scale = 1 / length picture / length original --- or just zoomlevel / the bigger the zoomlevel the smaller the scale (16 ~ 1:2500, 14 ~ 1:10000 , 11 ~ 1:100000
-	 //polygons = givenPolygons*SQRT(givenScale/scale)
-	 double mPerPixel = 156412;
-	 for (int i = 1; i<= zoom; i++){
-		 mPerPixel= mPerPixel/2;
-	 }
-	 System.out.println(mPerPixel);
-	 double pixelLength = mPerPixel*960; //TODO: get real px - strange scale calculation, just use pixelLength for now
-	 System.out.println(pixelLength);
-//	 double scale =   ( 960 /env.getWidth() ) *100;
-//	 System.out.println(env.getWidth());
-//	 System.out.println(scale);
-	 double cal = 230 * Math.pow((73318.125)/(pixelLength), 0.1); //135
-	 if ( cal > 230)cal = 230;  //based on calculation for maximum polygon size (fast transfer rate, explanation above)
+//	 //scale = 1 / length picture / length original --- or just zoomlevel / the bigger the zoomlevel the smaller the scale (16 ~ 1:2500, 14 ~ 1:10000 , 11 ~ 1:100000
+//	 //polygons = givenPolygons*SQRT(givenScale/scale)
+//	 double mPerPixel = 156412;
+//	 for (int i = 1; i<= zoom; i++){
+//		 mPerPixel= mPerPixel/2;
+//	 }
+//	 System.out.println(mPerPixel);
+//	 double pixelLength = mPerPixel*960; //TODO: get real px - strange scale calculation, just use pixelLength for now
+//	 System.out.println(pixelLength);
+////	 double scale =   ( 960 /env.getWidth() ) *100;
+////	 System.out.println(env.getWidth());
+////	 System.out.println(scale);
+//	 double cal = 230 * Math.pow((73318.125)/(pixelLength), 0.1); //135
+//	 if ( cal > 230)cal = 230;  //based on calculation for maximum polygon size (fast transfer rate, explanation above)
+	 
+	 
+	 
 	 //Loop for max amount of polygons
 	 int remC = 0;
 	 System.out.println("Tree size: "+ tree.size());
-	 System.out.println("reduce to : "+ cal);
-	 while(tree.size()>cal){
+	 System.out.println("reduce to : "+ maxTyp);
+	 while(tree.size()>maxTyp){
 		 watchnN.start();
 		 Object[] nearest = tree.nearestNeighbour(dist);
 		 watchnN.stop();
@@ -398,7 +409,7 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
  public static List<Polygon> mergeOverlaps (List<Polygon> polygons){
 	 int length = polygons.size();
 	 int intersectC = 0;
-	 System.out.println("check for overlaps - length = "+ length);
+	 System.out.println("check for overlaps - pol size = "+ length);
 	 for (int i = 0; i<length-1;i++){
 		 for(int j = 0; j<length;j++){
 			 if(i!=j && polygons.get(i).intersects(polygons.get(j))){
