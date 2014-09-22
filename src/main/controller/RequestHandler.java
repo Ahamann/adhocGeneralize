@@ -64,7 +64,7 @@ public class RequestHandler {
 	 * @throws JsonMappingException 
 	 * @throws JsonParseException 
 	 */
-	public static String getJson(String modeS, String minxS, String minyS, String maxxS, String maxyS, String scaleS) throws JsonParseException, JsonMappingException, IOException{
+	public static String getJson(String modeS, String minxS, String minyS, String maxxS, String maxyS, String scaleS, String maxTypifyS, String fixElementsS, String minAreaS, String minDistanceS) throws JsonParseException, JsonMappingException, IOException{
 		int mode = 0;
 		double scale = 0; 
 		double minx =-180;
@@ -73,6 +73,17 @@ public class RequestHandler {
 		double maxy =180;
 		String jsonString = "";	
 		TempParameterContainer parameter;
+		
+		int maxTyp = 0;
+		int maxElements = 0;
+		double minArea = 0; // example: 500 m² = 0,0000000005
+		double minDist = 0; // example:	200 m = 0.002
+		//new parameter 
+		//maxTypifyS
+		//fixElementsS
+		//minAreaS
+		//minDistanceS
+		
 		//set parameters
 		try{
 			mode = Integer.parseInt(modeS);

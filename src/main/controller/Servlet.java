@@ -41,9 +41,16 @@ public class Servlet extends HttpServlet {
 		String maxxString = (String) request.getParameter("maxx");
 		String maxyString = (String) request.getParameter("maxy");
 		String scaleString = (String) request.getParameter("scale");
-				
+		String maxTypifyString = (String) request.getParameter("maxTypify");
+		String fixElementsString = (String) request.getParameter("fixElements");
+		String minAreaString = (String) request.getParameter("minArea");
+		String minDistanceString = (String) request.getParameter("minDistance");
+
+		
+		
+		
 		//if ( modeString.equals("0")){
-			String json = RequestHandler.getJson(modeString, minxString, minyString, maxxString, maxyString, scaleString);
+			String json = RequestHandler.getJson(modeString, minxString, minyString, maxxString, maxyString, scaleString, maxTypifyString, fixElementsString, minAreaString, minDistanceString);
 			response.setContentType("text/html");
 			PrintWriter out = response.getWriter();
 		    out.println(json);

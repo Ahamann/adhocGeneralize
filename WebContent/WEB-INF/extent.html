@@ -70,10 +70,6 @@ overflow : auto;
 
 <script type="text/javascript">
 
-//get start time
-var now = new Date();
-var timebegin = now.getTime();
-
 //base map
 var map = L.map('map').setView([51, 0], 11)
 var cloudmade = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
@@ -93,39 +89,19 @@ var firstCall=true;
 //json Layer
 var jsonObject;
 var jsonLayer;
-
-//getParameters
-var mode=getURLParam("mode");					//mode / preset no.
-var fixScale = getURLParam("scale");			//set scale
-var fixSpeed = getURLParam("speed");			//set transfer rate
-var toggleLastExtent =  getURLParam("toggle");	//set Extent (minx,miny,maxx,maxy)
-var maxTypify =  getURLParam("typify");			//set max of typifications 
-var fixElements =  getURLParam("elements");		//set max no. of elemets showing
-var minArea =  getURLParam("area");				//set min area
-var minDistance =  getURLParam("distance");		//set min dist
-var save =  getURLParam("save");
-
+var mode=getURLParam("mode");
 if(mode=="")mode=0;
-if(fixScale=="")fixScale=0;
-if(toggleLastExtent=="")toggleLastExtent=0;
-if(maxTypify=="")maxTypify=0;
-if(fixElements=="")fixElements=0;
-if(minArea=="")minArea=0;
-if(minDistance=="")minDistance=0;
+var zoom =  map.getZoom();
 
-//last Extent
-if(toggleLastExtent==1){	
-	var tempBounds=map.getBounds();
-	var tempMinll=tempBounds.getSouthWest(); //minx,miny
-	var tempMaxll=tempBounds.getNorthEast(); //maxx, maxy
-	var fixMinX =tempMinll.lng;
-	var fixMinY =tempMinll.lat; 
-	var fixMaxX =tempMaxll.lng;
-	var fixMaxY =tempMaxll.lat; 
-}
 
 
 dragMap();
+
+
+
+
+
+
 
 
 
@@ -170,30 +146,25 @@ requester.dataBaseRequest(mode, 4.9,  45.9, 5.3,  46.2, zoom, function(data) {
 
 
 function dragMap(){
-	//set min / max coordinates - set coordinates for first call / set last extent as new extent if toggled otherwise get actual extent
+	
+	//get map extent
+	var bounds=map.getBounds();
+	var minll=bounds.getSouthWest(); //minx,miny
+	var maxll=bounds.getNorthEast(); //maxx, maxy
+	
+	//set min / max coordinates
 	if(firstCall){
 		var minx =4.9;
 		var miny =45.9; 
 		var maxx =5.3;
 		var maxy =46.2; 
 	} else{
-		if(toggleLastExtent==1){
-			var minx = fixMinX
-			var miny = fixMinY; 
-			var maxx = fixMaxX;
-			var maxy = fixMaxY; 
-			console.log("extent toggled");
-		} else {
-			//get map extent
-			var bounds=map.getBounds();
-			var minll=bounds.getSouthWest(); //minx,miny
-			var maxll=bounds.getNorthEast(); //maxx, maxy
-			var minx =minll.lng;
-			var miny =minll.lat; 
-			var maxx =maxll.lng;
-			var maxy =maxll.lat; 
-		}
+		var minx =minll.lng;
+		var miny =minll.lat; 
+		var maxx =maxll.lng;
+		var maxy =maxll.lat; 
 	}
+	
 	//get PPI / DPI
 	//get DPI / PPI for scale calculation
 	var div = document.createElement("div");
@@ -205,52 +176,49 @@ function dragMap(){
 	body.removeChild(div);
 	console.log("ppi/dpi="+ ppi);
 	
-	//calculate scale based in dpi and latitude - set given scale if set
+	//calculate scale based in dpi and latitude
 	//6378137.0 * 2 * Math.PI / 256 = 156543.034 //radius->tile size for zoom 0
-	if(fixScale==""){
-		var tilesize=156543.034;
-		var resolution= tilesize * Math.cos(map.getBounds().getNorthEast().lat-map.getBounds().getSouthWest().lat) /  (Math.pow(2,map.getZoom()));
-		var scale = ppi * 39.37 * resolution;
-		console.log("scale = 1:"+scale);
-	} else {
-		scale = fixscale;
-		console.log("fixed scale = 1:"+scale);
-	}
-
+	var tilesize=156543.034;
+	var resolution= tilesize * Math.cos(maxll.lat-minll.lat) /  (Math.pow(2,map.getZoom()));
+	var scale = ppi * 39.37 * resolution;
+	console.log("scale = 1:"+scale);
+	
 	//call map request
-	updateMap(mode, minx, miny, maxx, maxy,scale,maxTypify,fixElements,minArea,minDistance);
+	//zoom =  map.getZoom();
+	updateMap(mode, minx, miny, maxx, maxy,scale);
+	
+	
+	
+	
 	
 	//temp
-	// 1km² = 1000000m²
-	// 
-	var minMapLength = 0.01; //in m //= 1mm 
-	var realLength = minMapLength * scale / 100000; //in m , tranlated to coord unit which is 1 = 100km  //realcoords - 1,0 = 100km -> 1m = 0,00001  //100m -> 0,001
+	var minMapLength = 0.001; //= 1mm
+	var realLength = minMapLength * scale / 100000; //realcoords - 1,0 = 100km -> 1m = 0,00001
 	var minArea = realLength * realLength;
 	console.log(minArea);
-	console.log(map.getBounds().getNorthEast().lat-map.getBounds().getSouthWest().lat);
+
 }
 
 
 
+
 function updateMap(mode, minx, miny, maxx, maxy, scale){
-	requester.dataBaseRequest(mode, minx, miny, maxx, maxy,scale,maxTypify,fixElements,minArea,minDistance, function(data) { 
-		jsonObject = requester.getJSON(data);
-		
+	requester.dataBaseRequest(mode, minx, miny, maxx, maxy, scale, function(data) { 
+		jsonObject = requester.getJSON(data);					
 		var myStyle = {
 				"fill": "green",
 			   "fill-opacity": ".2",
 			   "stroke": "#000",
-			   "stroke-width":  "2px",			//overwritten by path (styles)
+			   "stroke-width":  "2px",
 				};	
 		//delete old layer
 		if(map.hasLayer(jsonLayer)){
 			map.removeLayer(jsonLayer);
 		}
-		//create new layer
 		jsonLayer = L.geoJson(jsonObject, {
 			onEachFeature: function (feature, layer) {
-		        //layer.bindPopup(feature.geometry.type); //feature.geometry.coordinates
-				layer.bindPopup("<b>Area:</b> </br>"+(feature.properties.area)+"</br>"+(feature.properties.area)*10000000000+"m²");
+		        //layer.bindPopup(feature.geometry.type);
+				layer.bindPopup("<b>Coordinates:</b> </br>" + feature.geometry.coordinates +"</br>"+(feature.properties.area));
 				//layer.bindPopup(feature.properties.area);
 		      }
 			//style: myStyle	
@@ -263,14 +231,6 @@ function updateMap(mode, minx, miny, maxx, maxy, scale){
 			firstCall = false;
 		}
 		
-		if(save==1){
-			window.open('data:text/json;charset=utf-8,' + data, "_blank ", "width=300, height=200");	
-		}
-		
-		var endnow = new Date();
-		var timeend = endnow.getTime();
-		var total = timeend -timebegin;
-		console.log ("total request time " + (total) );
 }); 
 	
 	
