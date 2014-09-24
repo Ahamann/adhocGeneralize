@@ -1,5 +1,7 @@
 package main.controller;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.codehaus.jackson.JsonParseException;
@@ -64,7 +66,7 @@ public class RequestHandler {
 	 * @throws JsonMappingException 
 	 * @throws JsonParseException 
 	 */
-	public static String getJson(String modeS, String minxS, String minyS, String maxxS, String maxyS, String scaleS, String maxTypifyS, String fixElementsS, String minAreaS, String minDistanceS,String speedS,String typmodeS, String weightS) throws JsonParseException, JsonMappingException, IOException{
+	public static String getJson(String modeS, String minxS, String minyS, String maxxS, String maxyS, String scaleS, String maxTypifyS, String fixElementsS, String minAreaS, String minDistanceS,String speedS,String typmodeS, String weightS,String unionS) throws JsonParseException, JsonMappingException, IOException{
 		int mode = 0;
 		double scale = 0; 
 		double minx =-180;
@@ -81,6 +83,7 @@ public class RequestHandler {
 		double speed = 320;
 		int typmode = 1;  //set modus of typify 0= recreate tree after nn with new polygon - 1 = delete 2 nodes and insert new one after nn
 		double weight = 2;
+		int union = -1;
 		//new parameter 
 		//maxTypifyS
 		//fixElementsS
@@ -104,6 +107,7 @@ public class RequestHandler {
 			if(!speedS.isEmpty())speed = Double.parseDouble(speedS);	x++;
 			if(!typmodeS.isEmpty())typmode = Integer.parseInt(typmodeS);	x++;
 			if(!weightS.isEmpty())weight = Double.parseDouble(weightS);	x++;
+			if(!unionS.isEmpty())union = Integer.parseInt(unionS);	x++;
 		}catch(Exception e){
 			System.out.println("could not parse parameter input: "+e.getMessage() + " Pos="+x);
 		}
@@ -179,31 +183,39 @@ public class RequestHandler {
 			double size= jsonString.length()/1024;
 			System.out.println("json length ~ " + size +"kb /// estimated download time with "+parameter.getSpeed() +"kbps = "+size*8/parameter.getSpeed() );
 			break;
-		
-		case 6: //get min Rectangle Diameter
-		Polygon[] arrayPoly6 = treeW.getPolygons(parameter.getEnv());
-		List<Polygon> listPoly6 = PolygonWorker.useSelection(arrayPoly6, parameter.getEnv(), parameter.getMaxElementsSel());
-		List<Polygon> listPoly6_2 = PolygonWorker.useNearestNeighborTypification(listPoly6, parameter.getEnv(), parameter.getMaxElementsTyp(), typmode,weight);
-		listPoly6_2 = PolygonWorker.mergeOverlaps(listPoly6_2);
-		listPoly6_2 = PolygonWorker.useAreaSelection(listPoly6_2, parameter.getMinArea());
-		listPoly6_2 = PolygonWorker.giveDiameter(listPoly6_2);
-		jsonString= GeoJsonWriter.getJsonString(listPoly6_2, treeW.getName(), treeW.getType());
-		break;
-		case 7: //select, union, typify, merge overlaps, deselect small
+		case 6: //select, union, typify, merge overlaps, deselect small
 			
 			
-			Polygon[] arrayPoly7 = treeW.getPolygons(parameter.getEnv());
-			int a = (int)(arrayPoly7.length- parameter.getMaxElementsSel())/100;
+			
+			Polygon[] arrayPoly6= treeW.getPolygons(parameter.getEnv());
+			int a=0;
+			if (union==-1)a = (int)(arrayPoly6.length- parameter.getMaxElementsSel())/100; //1% of deselection
+			else a=union;
 			if(a<0)a=0;
-			List<Polygon> listPoly7 = PolygonWorker.useSelection(arrayPoly7, parameter.getEnv(), parameter.getMaxElementsSel()+a);
-			listPoly7 = PolygonWorker.unionPolygons(listPoly7, parameter.getEnv(), a);
-			List<Polygon> listPoly7_2 = PolygonWorker.useNearestNeighborTypification(listPoly7, parameter.getEnv(), parameter.getMaxElementsTyp(), typmode,weight);
-			listPoly7_2 = PolygonWorker.mergeOverlaps(listPoly7_2);
-			listPoly7_2 = PolygonWorker.useAreaSelection(listPoly7_2, parameter.getMinArea());
-			jsonString= GeoJsonWriter.getJsonString(listPoly7_2, treeW.getName(), treeW.getType());
-			double size7= jsonString.length()/1024;
-			System.out.println("json length ~ " + size7 +"kb /// estimated download time with "+parameter.getSpeed() +"kbps = "+size7*8/parameter.getSpeed() );
+			List<Polygon> listPoly6 = PolygonWorker.useSelection(arrayPoly6, parameter.getEnv(), parameter.getMaxElementsSel()+a);
+			listPoly6 = PolygonWorker.unionPolygons(listPoly6, parameter.getEnv(), a);
+			List<Polygon> listPoly6_2 = PolygonWorker.useNearestNeighborTypification(listPoly6, parameter.getEnv(), parameter.getMaxElementsTyp(), typmode,weight);
+			listPoly6_2 = PolygonWorker.mergeOverlaps(listPoly6_2);
+			listPoly6_2 = PolygonWorker.useAreaSelection(listPoly6_2, parameter.getMinArea());
+			jsonString= GeoJsonWriter.getJsonString(listPoly6_2, treeW.getName(), treeW.getType());
+			double size6= jsonString.length()/1024;
+			System.out.println("json length ~ " + size6 +"kb /// estimated download time with "+parameter.getSpeed() +"kbps = "+size6*8/parameter.getSpeed() );
 			break;
+		case 7: //get min Rectangle Diameter
+		Polygon[] arrayPoly7 = treeW.getPolygons(parameter.getEnv());
+		List<Polygon> listPoly7 = PolygonWorker.useSelection(arrayPoly7, parameter.getEnv(), parameter.getMaxElementsSel());
+		List<Polygon> listPoly7_2 = PolygonWorker.useNearestNeighborTypification(listPoly7, parameter.getEnv(), parameter.getMaxElementsTyp(), typmode,weight);
+		listPoly7_2 = PolygonWorker.mergeOverlaps(listPoly7_2);
+		listPoly7_2 = PolygonWorker.useAreaSelection(listPoly7_2, parameter.getMinArea());
+		listPoly7_2 = PolygonWorker.giveDiameter(listPoly7_2);
+		jsonString= GeoJsonWriter.getJsonString(listPoly7_2, treeW.getName(), treeW.getType());
+		break;
+		case 8:
+			Polygon[] arrayPoly8 = treeW.getPolygons(parameter.getEnv());
+			listPoly7_2 = PolygonWorker.giveDiameter(Arrays.asList(arrayPoly8));
+			jsonString= GeoJsonWriter.getJsonString(listPoly7_2, treeW.getName(), treeW.getType());
+			break;
+			
 	
 	}
 		

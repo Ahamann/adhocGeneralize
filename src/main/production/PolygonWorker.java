@@ -7,6 +7,7 @@ import java.util.Timer;
 
 import main.helper.Watch;
 import main.objects.DistancePolygons;
+import main.save.TempParameterContainer;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
@@ -46,7 +47,6 @@ public class PolygonWorker {
 	public static Polygon[] json2polygons(String jsonString) throws JsonParseException, JsonMappingException, IOException{
 		//String name;
 		Polygon[] jsonPolygons;
-		
 		ObjectMapper m = new ObjectMapper();
 		JsonNode fullNode = null; //node of full json document
 		JsonNode featureNode = null; //node of features []
@@ -62,7 +62,7 @@ public class PolygonWorker {
 		for (int i= 0; i< featureNode.size() ; i++){ //TODO: length of loop
 			JsonNode coordNode;
 			coordNode = featureNode.get(i).findValue("coordinates").get(0);
-			
+			if(coordNode.size()==1)coordNode=coordNode.get(0); //go deeper if multipolygon
 			//inner loop for coordinates of feature/polygon
 			Coordinate[] tempCoords = new Coordinate[coordNode.size()];
 			for (int j = 0; j< coordNode.size();j++){
@@ -257,6 +257,8 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 		 watchnN.stop();
 		 Polygon a = (Polygon) nearest[0];
 		 Polygon b = (Polygon) nearest[1];
+		 double dis = (a.distance(b))*100000/ TempParameterContainer.scaleStatic;
+			System.out.println((dis*1000)+"mm");
 		 if(a.getArea()<b.getArea()){
 			 Polygon c = b; //temp save biggest
 			 b =  a; // b = smallest
@@ -276,7 +278,7 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 		 	tree.insert(newPolygon.getEnvelopeInternal(),newPolygon);
 		 	tree.build();
 	 remC++;
-	 //System.out.println(remC + " / " + max +" / actual tree size="+tree.size());
+	 System.out.println(remC + " / " + max +" / actual tree size="+tree.size());
 	 if(treeSize == tree.size()){
 		 System.out.println("nN error");
 		 break;
@@ -294,6 +296,8 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 		 watchnN.stop();
 		 Polygon a = (Polygon) nearest[0];
 		 Polygon b = (Polygon) nearest[1];
+		 double dis = (a.distance(b))*100000/ TempParameterContainer.scaleStatic;
+			System.out.println((dis*1000)+"mm");
 		//sort polygons based on area
 		 if(a.getArea()<b.getArea()){
 			 Polygon c = b; //temp save biggest
@@ -307,7 +311,7 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 		 //replace a (biggest) with newPolygon
 		 tree.replace(((Polygon) nearest[0]).getEnvelopeInternal(), ((Polygon) nearest[0]), newPolygon.getEnvelopeInternal(), newPolygon); 
 		 remC++;
-		 //System.out.println(remC + " / " + max +" / actual tree size="+tree.size());
+		 System.out.println(remC + " / " + max +" / actual tree size="+tree.size());
 		 if(treeSize == tree.size()){
 			 System.out.println("nN error");
 			 break;
@@ -348,6 +352,10 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 			 Object[] nearest = tree.nearestNeighbour(dist);
 			 Polygon a = (Polygon) nearest[0];
 			 Polygon b = (Polygon) nearest[1];
+			 double dis = (a.distance(b))*100000/ TempParameterContainer.scaleStatic;
+			System.out.println((dis*1000)+"mm");
+			 
+			 
 			 if(a.getArea()<b.getArea()){
 				 Polygon c = b; //temp save biggest
 				 b =  a; // b = smallest
@@ -408,15 +416,16 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
  private static Polygon clusterPolygons(Polygon a, Polygon b){	 
 	
 		 //get ratio
-		 int translationTolerance = 1; // 1 = normal - the bigger the number the bigger the shift of the polygon
+		 double  translationTolerance = 1; // 1 = normal - the bigger the number the bigger the shift of the polygon
 		 double ratio = a.getArea() / b.getArea();
+		 ratio= ratio/translationTolerance;
 		 //get centroid - centre of gravity
 		 Point centroidA = a.getCentroid();
 		 Point centroidB = b.getCentroid();
 		 double distX = centroidA.getX()-centroidB.getX(); //dist = distance to new point based on ratio, not only based on mean of 2 centroids
 		 double distY = centroidA.getY()-centroidB.getY();
-		 distX = -distX / 2 / (ratio/translationTolerance);  
-		 distY = -distY / 2 / (ratio/translationTolerance);
+		 distX = -distX / 2 / (ratio);///translationTolerance);  
+		 distY = -distY / 2 / (ratio);///translationTolerance);
 		 //create new Polygon based on biggest polygon, transform polygon with affine transformation
 		 //the difference between centroids (and ratio - so bigger polygons wont move as much as smaller ones) is used to get new position
 		 //set parameters for transformation
@@ -549,8 +558,12 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 	
  	for (int i = 0; i< polygons.size();i++){
 	
+ 		for(int a=0;a<2;a++){
  		MinimumDiameter minD = 	new MinimumDiameter(polygons.get(i));
- 		Coordinate[]  coords = minD.getDiameter().getCoordinates();
+ 		Coordinate[]  coords = null;
+ 				
+ 		if(a==0)coords= minD.getSupportingSegment() .getCoordinates();  //getDiameter() //getMinimumRectangle() 
+ 		if(a==1)coords= minD.getDiameter() .getCoordinates(); 
  		
  		int length = coords.length;
 
@@ -571,22 +584,22 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 		//polygonList.add(polygons.get(i));
 		polygonList.add(tempPoly);
 		
+ 		}
+//		Coordinate a = coords[0];
+//		Coordinate b = coords[1];
+//		
+//		double sideA = b.x- a.x;
+//		double sideB = b.y- a.y;
+//		
+//		//double sideC = Math.sqrt(Math.pow(sideA,2) + Math.pow(sideB,2));
+//		//double alpha = Math.acos(  (Math.pow(sideB,2)+Math.pow(sideC,2)-Math.pow(sideA,2)) / 2 * sideB * sideC ) ;
+//		//double alphaDegree = alpha * 180 / Math.PI;
+//		double m = sideB / sideA;
+//		double alpha = Math.atan(m);
+//		double alphaDegree = alpha * 180 / Math.PI;
 		
-		Coordinate a = coords[0];
-		Coordinate b = coords[1];
 		
-		double sideA = b.x- a.x;
-		double sideB = b.y- a.y;
-		
-		//double sideC = Math.sqrt(Math.pow(sideA,2) + Math.pow(sideB,2));
-		//double alpha = Math.acos(  (Math.pow(sideB,2)+Math.pow(sideC,2)-Math.pow(sideA,2)) / 2 * sideB * sideC ) ;
-		//double alphaDegree = alpha * 180 / Math.PI;
-		double m = sideB / sideA;
-		double alpha = Math.atan(m);
-		double alphaDegree = alpha * 180 / Math.PI;
-		
-		
-		System.out.println("ANGLE = " + alpha + "   /   "+alphaDegree ); // + clockwise - counter clockwise
+//		System.out.println("ANGLE = " + alpha + "   /   "+alphaDegree ); // + clockwise - counter clockwise
 	}
 	 
 	 

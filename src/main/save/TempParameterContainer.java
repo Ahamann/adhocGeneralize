@@ -31,6 +31,8 @@ public class TempParameterContainer {
 	int fixScale;	//radical law, given scale
 	int fixCount;	//radical law, given amount of elements
 	
+	public static double scaleStatic;
+	
 	/**
 	 * create parameter container with mandatory inputs
 	 * @param m
@@ -47,7 +49,7 @@ public class TempParameterContainer {
 		minY=miy;
 		maxX=max;
 		maxY=may;
-		
+		scaleStatic=scale;
 		env=new Envelope(minX,minY,maxX,maxY);
 		
 		speed = 0;
@@ -68,6 +70,9 @@ public class TempParameterContainer {
 		double realLength = minMapLength * scale / 100000; //in m , translated to coord unit which is 1 = 100km  //realcoords - 1,0 = 100km -> 1m = 0,00001  //100m -> 0,001
 		minArea = realLength * realLength;
 		
+		
+		//double dist = 0.003 * scale / 100000;
+		//System.out.println(dist+"=max dist in m");
 		
 		//based on bertins generalisation - input for radical law (töpfer)
 		fixScale = 1000000;

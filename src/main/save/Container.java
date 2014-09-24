@@ -16,11 +16,10 @@ public class Container {
 
 	//Constants
 	//Path
-	public static String pathOrig = "C:\\GenData\\lakesGeo.json";
+	public static String pathOrig = "C:\\GenData\\lakesBetter.geojson";//lakesGeo.json";
 	public static String pathFolder = "C:\\GenData\\rEntries\\lakesGeo";
 	public static String name = "water";
 	public static String type = "FeatureCollection";
-	
 	
 	//TreeWorkers
 	static List<TreeWorker> savedTreeWorker;

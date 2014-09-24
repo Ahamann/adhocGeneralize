@@ -80,7 +80,7 @@ var mapWidth = map.getSize().x
 			};												//overwritten by path (styles)
 		
 			
-			$.getJSON("./data/lakesGeo.json", function(data) {
+			$.getJSON("./data/lakesBetter.geojson", function(data) {
 				var jsonLayer = new L.geoJson(data, {
 					onEachFeature: function (feature, layer) {
 				        layer.bindPopup(feature);

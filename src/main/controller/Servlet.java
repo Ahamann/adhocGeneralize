@@ -48,10 +48,11 @@ public class Servlet extends HttpServlet {
 		String speed = (String) request.getParameter("speed");
 		String typmode = (String) request.getParameter("typmode");
 		String weight = (String) request.getParameter("weight");
+		String union = (String) request.getParameter("union");
 		
 		
 		//if ( modeString.equals("0")){
-			String json = RequestHandler.getJson(modeString, minxString, minyString, maxxString, maxyString, scaleString, maxTypifyString, fixElementsString, minAreaString, minDistanceString,speed,typmode,weight);
+			String json = RequestHandler.getJson(modeString, minxString, minyString, maxxString, maxyString, scaleString, maxTypifyString, fixElementsString, minAreaString, minDistanceString,speed,typmode,weight,union);
 			response.setContentType("text/html");
 			System.out.println("Total time before sending : "+ (double)requestTime.getElapsedTime() /1000+" s");
 			PrintWriter out = response.getWriter();
