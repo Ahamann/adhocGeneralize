@@ -2,6 +2,11 @@ package main.save;
 
 import com.vividsolutions.jts.geom.Envelope;
 
+/**
+ * class to provide, manage and manipulate parameters
+ * @author Bernd Grafe
+ *
+ */
 public class TempParameterContainer {
 
 	//input necessary-mandatory 
@@ -26,7 +31,15 @@ public class TempParameterContainer {
 	int fixScale;	//radical law, given scale
 	int fixCount;	//radical law, given amount of elements
 	
-	
+	/**
+	 * create parameter container with mandatory inputs
+	 * @param m
+	 * @param s
+	 * @param mix
+	 * @param miy
+	 * @param max
+	 * @param may
+	 */
 	public TempParameterContainer(int m, double s, double mix, double miy, double max, double may){
 		mode= m;
 		scale=s;
@@ -38,7 +51,8 @@ public class TempParameterContainer {
 		env=new Envelope(minX,minY,maxX,maxY);
 		
 		speed = 0;
-		maxTyp = 30;
+		maxTyp = 30;   // about 180ms per nN search
+		time = 5;
 		
 		//min Distance not implemented
 		minDist = 0; //not used
@@ -59,14 +73,20 @@ public class TempParameterContainer {
 		fixScale = 1000000;
 		fixCount = 135;
 		
-		maxElementsTotal = (int) (fixCount * Math.pow((fixScale)/(scale), 0.5)); //0,5 is normal square root
-		maxElementsTyp = maxElementsTotal;
-		maxElementsSel = maxElementsTyp + maxTyp; //select / typify until max number - but maximum maxTyp-times typify
+		calcRLaw ();
+		System.out.println("scale: "+scale);
 		
 		
 	} 
 
-
+	/**
+	 * calculate max amount of elements based on given scale and objects
+	 */
+	private void calcRLaw (){
+		maxElementsTotal = (int) (fixCount * Math.pow((fixScale)/(scale), 0.5)); //0,5 is normal square root
+		maxElementsTyp = maxElementsTotal;
+		maxElementsSel = maxElementsTyp + maxTyp; //select / typify until max number - but maximum maxTyp-times typify	
+	}
 	
 	/**
 	 * set max number of elements based on speed/transfer rate - based on average data file size and file size for polygons
@@ -74,8 +94,9 @@ public class TempParameterContainer {
 	 */
 	public void setSpeed(double s){
 		speed = s; //in kb/s
+		//* with: x=2sec/8*380kbps -> x=95kbyte [1byte=8bit][sek=kbyte*8/kbps] / 1sec->45kbyte /4sec->190kbyte
 		
-		double maxDataSize = time / 8 * speed;  //1byte = 8 bit
+		double maxDataSize = time / 8 * speed;  //1byte = 8 bit   //in kbyte
 		
 		//calculate max polygons based on normal data file - estimated
 		// header+body without polygon ~ 300 byte 
@@ -83,21 +104,90 @@ public class TempParameterContainer {
 		//there are 1174 files (tree entries) with total 843kBytes -> 735.91 bytes per file with 300bytes header = 434.91bytes for polygons -> divided by 25 bytes = 17,4 ~ 18 Point per Polygon
 		// 18 Points per Polygon * 25 Bytes = 450 Bytes per Polygon
 		// head+body = 300bytes   / 1 polygon = 450 bytes
+		maxDataSize = maxDataSize*1024; //kbyte in byte
 		
-		int maxCountSpeed = (int) ((maxDataSize - 300)/450);
+		//new calc - head = 55bytes // polygon = 62 bytes (name etc) + points + 176 bytes (properties)
+		System.out.println("ds max="+maxDataSize +"byte");
+		//int maxCountSpeed = (int) ((maxDataSize - 55)/(450+62+176)); //this is only valid for normal polygons, not generalized
+		
+		//generalized polygons are bigger the bigger the scale
+		//200000 -> 48
+		//100000 -> 44
+		//50000 -> 40
+		//25000 -> 30
+		int header = 55;
+		int polyHeader = 65;
+	    int polyProp = 180;
+	    int pointsinPoly = 18; //normal // with 25 bytes per point
+	    
+	    if( scale > 25000){
+	    	pointsinPoly = 30;
+	    } 
+	    if( scale > 50000){
+	    	pointsinPoly = 40;
+	    } 
+	    if( scale > 100000){
+	    	pointsinPoly = 44;
+	    }  
+	    if( scale > 200000){
+	    	pointsinPoly = 50;
+	    }
+	    
+		int maxCountSpeed = (int) ((maxDataSize - header)/(polyHeader + (pointsinPoly*25)+ polyProp)); 
+		System.out.println("scale: "+scale+" -> set points per polygon to :"+pointsinPoly);
 		
 		if(maxCountSpeed<maxElementsTotal){
 			maxElementsTyp=maxCountSpeed;
 			maxElementsSel=maxElementsTyp+maxTyp;
 		}		
 		
-		System.out.println("Töpfer max= "+maxElementsTotal +"speed max with "+speed+"kbps = " +maxElementsTyp);
+		System.out.println("Töpfer max= "+maxElementsTotal +" / max with "+speed+"kbps = " +maxCountSpeed);
 	}
 	
 	
+	/**
+	 * set amount of max objects for a given scale to calculate max for other scales
+	 * @param fixCount
+	 * @param fixScale
+	 */
+	public void setFixCountScale(int fixCount,int fixScale) {
+		this.fixCount = fixCount;
+		this.fixScale = fixScale;
+		calcRLaw ();
+	}
+
+	/**
+	 * set maximum amount of objects shown 
+	 * @param max
+	 */
+	public void setMaxElements(int max){
+		maxElementsTotal = max;
+		maxElementsTyp = maxElementsTotal;
+		maxElementsSel = maxElementsTyp + maxTyp;
+	}
 	
 	
-	//Setters and Getters
+	/**
+	 * set maximum for typification steps
+	 * @param maxTyp
+	 */
+	public void setTypElements(int maxTyp) {
+		this.maxTyp = maxTyp;
+		calcRLaw ();
+	}
+	
+	// generic Setters and Getters
+	
+	public void setScale(double scale) {
+		this.scale = scale;
+	}
+
+	
+	public void setMaxElementsTyp(int maxElementsTyp) {
+		this.maxElementsTyp = maxElementsTyp;
+	}
+	
+	
 	
 	public double getTime(){
 		return time;
@@ -107,8 +197,13 @@ public class TempParameterContainer {
 		this.time=time;
 	}
 	
+	public void setMinArea(double minArea) {
+		double minMapLength =minArea;// 0.001; // in m//= 1mm
+		double realLength = minMapLength * scale / 100000; //in m , translated to coord unit which is 1 = 100km  //realcoords - 1,0 = 100km -> 1m = 0,00001  //100m -> 0,001
+		this.minArea = realLength * realLength;
+	}
 	
-
+	
 	public int getMode() {
 		return mode;
 	}
@@ -179,14 +274,11 @@ public class TempParameterContainer {
 	//}
 
 
-	//public String getRatio() {
-	//	return ratio;
-	//}
+	public int getTypElements() {
+		return maxTyp;
+	}
 
 
-	//public void setRatio(String ratio) {
-	//	this.ratio = ratio;
-	//}
 
 
 	public double getMinDist() {
@@ -204,9 +296,6 @@ public class TempParameterContainer {
 	}
 
 
-	public void setMinArea(double minArea) {
-		this.minArea = minArea;
-	}
 
 
 	public int getMaxElementsTotal() {
@@ -234,9 +323,7 @@ public class TempParameterContainer {
 	}
 
 
-	public void setMaxElementsTyp(int maxElementsTyp) {
-		this.maxElementsTyp = maxElementsTyp;
-	}
+
 
 
 	public Envelope getEnv() {
@@ -254,19 +341,10 @@ public class TempParameterContainer {
 	}
 
 
-	public void setScale(double scale) {
-		this.scale = scale;
-	}
-
-
 	public int getFixScale() {
 		return fixScale;
 	}
 
-
-	public void setFixScale(int fixScale) {
-		this.fixScale = fixScale;
-	}
 
 
 	public int getFixCount() {
@@ -274,9 +352,7 @@ public class TempParameterContainer {
 	}
 
 
-	public void setFixCount(int fixCount) {
-		this.fixCount = fixCount;
-	}
+
 	
 	
 	

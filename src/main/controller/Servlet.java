@@ -45,14 +45,17 @@ public class Servlet extends HttpServlet {
 		String fixElementsString = (String) request.getParameter("fixElements");
 		String minAreaString = (String) request.getParameter("minArea");
 		String minDistanceString = (String) request.getParameter("minDistance");
-
-		
+		String speed = (String) request.getParameter("speed");
+		String typmode = (String) request.getParameter("typmode");
+		String weight = (String) request.getParameter("weight");
 		
 		
 		//if ( modeString.equals("0")){
-			String json = RequestHandler.getJson(modeString, minxString, minyString, maxxString, maxyString, scaleString, maxTypifyString, fixElementsString, minAreaString, minDistanceString);
+			String json = RequestHandler.getJson(modeString, minxString, minyString, maxxString, maxyString, scaleString, maxTypifyString, fixElementsString, minAreaString, minDistanceString,speed,typmode,weight);
 			response.setContentType("text/html");
+			System.out.println("Total time before sending : "+ (double)requestTime.getElapsedTime() /1000+" s");
 			PrintWriter out = response.getWriter();
+
 		    out.println(json);
 		//}else {
 		//	String json = RequestHandler.getJson();
@@ -62,7 +65,8 @@ public class Servlet extends HttpServlet {
 		//}	
 			
 		    requestTime.stop();
-		    System.out.println("Total time for request (backend) : "+ requestTime.getElapsedTime());
+		    System.out.println("Total time for request (backend) : "+ (double)requestTime.getElapsedTime() /1000+" s");
+		    System.out.println("//////////////////");
 		    
 		}
 
