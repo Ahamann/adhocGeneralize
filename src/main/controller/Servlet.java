@@ -64,6 +64,7 @@ public class Servlet extends HttpServlet {
 			System.out.println("Total time before sending : "+ (double)requestTime.getElapsedTime() /1000+" s");
 		    out.println(json);
 		    
+		    
 		//}else {
 		//	String json = RequestHandler.getJson();
 		//	response.setContentType("text/html");

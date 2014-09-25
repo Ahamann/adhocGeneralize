@@ -93,7 +93,7 @@ public class TreeWorker {
 	 * @throws JsonParseException 
 	 */
 	public Polygon[] getPolygons() throws JsonParseException, JsonMappingException, IOException{
-		Envelope env = new Envelope(-180,180,-180,180); //TODO: check if this is Extent for whole map
+		Envelope env = new Envelope(-180,-90,180,90); //TODO: check if this is Extent for whole map
 		getPolygons(env);
 		return polygons;
 	}
@@ -119,7 +119,7 @@ public class TreeWorker {
 	 * @throws IOException
 	 */
 	public STRtree getTree() throws JsonParseException, JsonMappingException, IOException{
-		Envelope env = new Envelope(-180,180,-180,180); //TODO: check if this is Extent for whole map
+		Envelope env = new Envelope(-180,-90,180,90); //TODO: check if this is Extent for whole map
 		getTree(env);
 		return polygonTree;
 	}
@@ -174,7 +174,7 @@ public class TreeWorker {
 	 * @throws IOException
 	 */
 	public void setPolygonTree() throws JsonParseException, JsonMappingException, IOException{
-		Envelope env = new Envelope(-180,180,-180,180); //TODO: check if this is Extent for whole map
+		Envelope env = new Envelope(-180,-90,180,90); //TODO: check if this is Extent for whole map
 		setPolygon(false,env);
 	}
 	/**
@@ -215,5 +215,11 @@ public class TreeWorker {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+	
+	
+	public Envelope getEnvelope(){
+		Envelope env = (Envelope) jsonTree.getRoot().getBounds();
+		return env;
 	}
 }

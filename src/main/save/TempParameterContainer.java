@@ -50,7 +50,7 @@ public class TempParameterContainer {
 		maxX=max;
 		maxY=may;
 		scaleStatic=scale;
-		env=new Envelope(minX,minY,maxX,maxY);
+		env=new Envelope(minX,maxX,minY,maxY);
 		
 		speed = 0;
 		maxTyp = 30;   // about 180ms per nN search

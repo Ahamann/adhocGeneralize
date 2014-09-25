@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Timer;
 
 import main.helper.Watch;
+import main.objects.Cluster;
 import main.objects.DistancePolygons;
 import main.save.TempParameterContainer;
 
@@ -260,8 +261,8 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 		 watchnN.stop();
 		 Polygon a = (Polygon) nearest[0];
 		 Polygon b = (Polygon) nearest[1];
-		 double dis = (a.distance(b))*100000/ TempParameterContainer.scaleStatic;
-			System.out.println((dis*1000)+"mm");
+		 //double dis = (a.distance(b))*100000/ TempParameterContainer.scaleStatic;
+		//	System.out.println((dis*1000)+"mm");
 		 if(a.getArea()<b.getArea()){
 			 Polygon c = b; //temp save biggest
 			 b =  a; // b = smallest
@@ -299,8 +300,8 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 		 watchnN.stop();
 		 Polygon a = (Polygon) nearest[0];
 		 Polygon b = (Polygon) nearest[1];
-		 double dis = (a.distance(b))*100000/ TempParameterContainer.scaleStatic;
-			System.out.println((dis*1000)+"mm");
+		 //double dis = (a.distance(b))*100000/ TempParameterContainer.scaleStatic;
+		//	System.out.println((dis*1000)+"mm");
 		//sort polygons based on area
 		 if(a.getArea()<b.getArea()){
 			 Polygon c = b; //temp save biggest
@@ -393,22 +394,21 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 			 Object[] nearest = tree.nearestNeighbour(dist);
 			 Polygon a = (Polygon) nearest[0];
 			 Polygon b = (Polygon) nearest[1];
-			 double dis = (a.distance(b))*100000/ TempParameterContainer.scaleStatic;
-			System.out.println((dis*1000)+"mm");
-			 
-			 
-			 if(a.getArea()<b.getArea()){
-				 Polygon c = b; //temp save biggest
-				 b =  a; // b = smallest
-				 a = c; // a = biggest
-			 }
+			 double distance = a.distance(b);
+			 a = (Polygon) a.buffer(distance);
+			 b = (Polygon) b.buffer(distance);
+			 Polygon c = (Polygon) a.union(b);
+			 c= (Polygon) c.buffer(-distance);
+			 //double dis = (a.distance(b))*100000/ TempParameterContainer.scaleStatic;
+			//System.out.println((dis*1000)+"mm");
+		
 
-			 GeometryFactory geometryFactory = new GeometryFactory();
-			 Geometry newGeom =  a.union(b);
-			 newGeom = newGeom.convexHull();
-			 Coordinate[] coords= newGeom.getCoordinates();
-			 LinearRing shell = geometryFactory.createLinearRing(coords);
-			 Polygon newPolygon = geometryFactory.createPolygon(shell, null);
+//			 GeometryFactory geometryFactory = new GeometryFactory();
+//			 Geometry newGeom =  a.union(b);
+//			 newGeom = newGeom.convexHull();
+//			 Coordinate[] coords= newGeom.getCoordinates();
+//			 LinearRing shell = geometryFactory.createLinearRing(coords);
+//			 Polygon newPolygon = geometryFactory.createPolygon(shell, null);
 			 
 			 
 			 tree.remove(((Polygon) nearest[0]).getEnvelopeInternal(), ((Polygon) nearest[0]));
@@ -419,7 +419,7 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 			 	for (int i = 0; i<polygonListTemp.size();i++){
 			 		tree.insert(polygonListTemp.get(i).getEnvelopeInternal(),polygonListTemp.get(i)); //save indexes to delete them
 			 	}
-			 	tree.insert(newPolygon.getEnvelopeInternal(),newPolygon);
+			 	tree.insert(c.getEnvelopeInternal(),c);
 			 	tree.build();
 		 //System.out.println(remC + " / " + max +" / actual tree size="+tree.size());
 		 if(treeSize == tree.size()){
@@ -454,10 +454,10 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
   * @param b
   * @return
   */
- private static Polygon clusterPolygons(Polygon a, Polygon b){	 
+ public static Polygon clusterPolygons(Polygon a, Polygon b){	 
 	
 		 //get ratio
-		 double  translationTolerance = 1; // 1 = normal - the bigger the number the bigger the shift of the polygon
+		 double  translationTolerance = 0.5; // 1 = normal - the bigger the number the bigger the shift of the polygon
 		 double ratio = a.getArea() / b.getArea();
 		 ratio= ratio/translationTolerance;
 		 //get centroid - centre of gravity
@@ -654,6 +654,28 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 		
 	return polygonList;
  }
+ 
+ 
+ 
+ 
+ 
+ public static List<Cluster> bubbleSortCluster(List<Cluster> cluster){
+	 Cluster temp;
+		for(int i=1; i<cluster.size(); i++) {
+			for(int j=0; j<cluster.size()-i; j++) {
+				
+				if(cluster.get(j).getStep()<cluster.get(j+1).getStep()) {  //change if biggest or smallest should be "bubbled"
+					temp=cluster.get(j);
+					cluster.set(j, cluster.get(j+1));
+					cluster.set(j+1, temp);
+				}
+				
+				
+			}
+		}
+		return cluster;
+ }
+ 
 }
 
 

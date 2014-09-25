@@ -7,6 +7,7 @@ import java.util.List;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 
+import main.objects.Cluster;
 import main.production.Factory;
 import main.production.PolygonWorker;
 import main.production.TreeWorker;
@@ -15,6 +16,7 @@ import main.save.Container;
 import main.save.TempParameterContainer;
 
 import com.vividsolutions.jts.geom.Envelope;
+import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.strtree.STRtree;
 
@@ -81,8 +83,8 @@ public class RequestHandler {
 		double minArea = 0; // example: 500 m² = 0,0000000005
 		double minDist = 0; // example:	200 m = 0.002
 		double speed = 320;
-		int typmode = 1;  //set modus of typify 0= recreate tree after nn with new polygon - 1 = delete 2 nodes and insert new one after nn
-		double weight = 2;
+		int typmode = 0;  //set modus of typify 0= recreate tree after nn with new polygon - 1 = delete 2 nodes and insert new one after nn
+		double weight = 0;
 		int union = -1;
 		//new parameter 
 		//maxTypifyS
@@ -200,8 +202,7 @@ public class RequestHandler {
 			listPoly6_2 = PolygonWorker.mergeOverlaps(listPoly6_2);
 			listPoly6_2 = PolygonWorker.useAreaSelection(listPoly6_2, parameter.getMinArea());
 			jsonString= GeoJsonWriter.getJsonString(listPoly6_2, treeW.getName(), treeW.getType());
-			double size6= jsonString.length()/1024;
-			System.out.println("json length ~ " + size6 +"kb /// estimated download time with "+parameter.getSpeed() +"kbps = "+size6*8/parameter.getSpeed() );
+			
 			break;
 		case 7: //get min Rectangle Diameter
 		Polygon[] arrayPoly7 = treeW.getPolygons(parameter.getEnv());
@@ -214,13 +215,78 @@ public class RequestHandler {
 		break;
 		case 8:
 			Polygon[] arrayPoly8 = treeW.getPolygons(parameter.getEnv());
-			listPoly7_2 = PolygonWorker.giveDiameter(Arrays.asList(arrayPoly8));
-			jsonString= GeoJsonWriter.getJsonString(listPoly7_2, treeW.getName(), treeW.getType());
+			List<Polygon> listPoly8 = PolygonWorker.giveDiameter(Arrays.asList(arrayPoly8));
+			jsonString= GeoJsonWriter.getJsonString(listPoly8, treeW.getName(), treeW.getType());
 			break;
+		case 9:
+		List<Cluster> cluster = new ArrayList<Cluster>();
+		cluster.add(Container.getCluster().get(0));
+		System.out.println(Container.getCluster().size()+"sizeClusterRoot");
+		
+		Envelope tempE= Container.getCluster().get(0).getExtent();
+		System.out.println("cluster: minx="+tempE.getMinX()+ " miny="+tempE.getMinY()+ " maxx="+tempE.getMaxX()+ " maxy="+tempE.getMaxY());
+		Envelope aktE= parameter.getEnv();
+		System.out.println("searchE: minx="+aktE.getMinX()+ " miny="+aktE.getMinY()+ " maxx="+aktE.getMaxX()+ " maxy="+aktE.getMaxY());
+		
+		List<Polygon> polygons = new ArrayList<Polygon>();
+		
+		int maxPolygons = parameter.getMaxElementsTyp();
+		
+
+//		
+//		while(cluster.size()<maxPolygons){
+//			
+//			for(int i=0;i<cluster.size();i++){
+//				Cluster visit = cluster.get(i);
+//				if(visit.getChildA()!=null && visit.getChildB()!=null){
+//					cluster.add(visit.getChildA());
+//					cluster.add(visit.getChildB());
+//					cluster.remove(i);i--;
+//				} //else its a cluster without children = last entries and stay in array
+//			}
+//			cluster = PolygonWorker.bubbleSortCluster(cluster);
+//		}
+//		
+		System.out.println(maxPolygons+" maxPolys");
+		for(int i=0;i<cluster.size();i++){
+			if(cluster.size()>=maxPolygons)break;
+			Cluster visit = cluster.get(i);
+			if (parameter.getEnv().intersects(visit.getExtent()) || visit.getExtent().intersects(parameter.getEnv())){
+				System.out.println(i);
+				
+				if(visit.getChildA()!=null && visit.getChildB()!=null){
+					cluster.add(visit.getChildA());
+					cluster.add(visit.getChildB());
+					cluster.remove(i);i--;
+					cluster = PolygonWorker.bubbleSortCluster(cluster);
+					if(cluster.size()>=maxPolygons)break;
+				}
+			}else{
+				cluster.remove(i);i--; //delete cluster, if it isnt in given extent
+			}
+			
+			 //else its a cluster without children = last entries and stay in array
+		}
+		
+		
+		//GeometryFactory gf = new GeometryFactory();												// env view
+		System.out.println(cluster.size()+" size");
+		for (int i = 0;i<cluster.size();i++){
+			
+			polygons.add(cluster.get(i).getStructure());
+			//polygons.add((Polygon) gf.toGeometry( cluster.get(i).getExtent()) );  //get Extentview  // env view
+		}
+		
+		polygons = PolygonWorker.mergeOverlaps(polygons); //only really necessary with weighting
+		jsonString= GeoJsonWriter.getJsonString(polygons, treeW.getName(), treeW.getType());
+			
+		
+		break;
 			
 	
 	}
-		
+		double size6= jsonString.length()/1024;
+		System.out.println("json length ~ " + size6 +"kb /// estimated download time with "+parameter.getSpeed() +"kbps = "+size6*8/parameter.getSpeed() );
 		return jsonString;	
 	}
 }
