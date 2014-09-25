@@ -2,6 +2,7 @@ package main.controller;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -53,11 +54,16 @@ public class Servlet extends HttpServlet {
 		
 		//if ( modeString.equals("0")){
 			String json = RequestHandler.getJson(modeString, minxString, minyString, maxxString, maxyString, scaleString, maxTypifyString, fixElementsString, minAreaString, minDistanceString,speed,typmode,weight,union);
-			response.setContentType("text/html");
-			System.out.println("Total time before sending : "+ (double)requestTime.getElapsedTime() /1000+" s");
+			response.setContentType("application/json");
+			response.setCharacterEncoding("utf-8");
+			//response.setHeader("Content-Encoding", "gzip");
+			//PrintWriter out = new PrintWriter(new GZIPOutputStream(response.getOutputStream()));//response.getWriter();
+			//!!!gzip doesnt send a valid response - its just a part of json file
+			
 			PrintWriter out = response.getWriter();
-
+			System.out.println("Total time before sending : "+ (double)requestTime.getElapsedTime() /1000+" s");
 		    out.println(json);
+		    
 		//}else {
 		//	String json = RequestHandler.getJson();
 		//	response.setContentType("text/html");

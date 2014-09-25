@@ -18,7 +18,7 @@ public class GeoJsonReader {
 	 * @return String
 	 */
 	public static String readFile(String path){
-	//System.out.println("path : " + path);
+	//System.out.println("path : " + path + " reading...");
 		
 	String sCurrentLine;
 	String sJSON = "";
@@ -43,6 +43,7 @@ public class GeoJsonReader {
 			ex.printStackTrace();
 		}
 	}
+	//System.out.println("reading done");
 	return sJSON;	
 	}
 

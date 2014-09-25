@@ -7,6 +7,7 @@ requester.dataBaseRequest = function(mode, minx, miny, maxx, maxy,scale,maxTypif
 	$.ajax({
 		"url" : 'mainServlet',
 		"type" : 'GET',
+		"dataType" : 'json',
 		"data" : {
 			"mode" : mode,
 			"minx" : minx,		

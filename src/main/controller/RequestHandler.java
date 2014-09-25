@@ -128,6 +128,8 @@ public class RequestHandler {
 		TreeWorker treeW = list.get(0);
 
 		//switch between generalization modes
+		System.out.println(minx+" "+miny+" "+maxx+" "+maxy);
+		
 		switch(mode){
 		case 0:
 			//normal request - get polygons based on extent	

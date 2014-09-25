@@ -65,7 +65,7 @@ overflow : auto;
 //http://localhost:8080/gengit/?mode=5&speed=0&typmode=&area=0.0005&toggle=0&scale=1000000&typify=80
 
 //base map
-var map = L.map('map').setView([46.035, 5.06], 11)
+var map = L.map('map').setView([51,13],11); //([46.035, 5.06], 11)
 var cloudmade = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 							attribution: 'bla',
 							}).addTo(map);	
@@ -170,12 +170,12 @@ requester.dataBaseRequest(mode, 4.9,  45.9, 5.3,  46.2, zoom, function(data) {
 function dragMap(){
 
 	//set min / max coordinates - set coordinates for first call / set last extent as new extent if toggled otherwise get actual extent
-	if(firstCall){
-		var minx =4.9;
-		var miny =45.9; 
-		var maxx =5.3;
-		var maxy =46.2; 
-	} else{
+	//if(firstCall){
+	//	var minx =4.9;
+	//	var miny =45.9; 
+	//	var maxx =5.3;
+	//	var maxy =46.2; 
+	//} else{
 		if(toggleLastExtent==1){
 			var minx = fixMinX
 			var miny = fixMinY; 
@@ -192,7 +192,7 @@ function dragMap(){
 			var maxx =maxll.lng;
 			var maxy =maxll.lat; 
 		}
-	}
+	//}
 	//get PPI / DPI
 	//get DPI / PPI for scale calculation
 	var div = document.createElement("div");
@@ -238,7 +238,8 @@ function updateMap(mode, minx, miny, maxx, maxy,scale,maxTypify,fixElements,minA
 	var timebegin = now.getTime();
 	
 	requester.dataBaseRequest(mode, minx, miny, maxx, maxy,scale,maxTypify,fixElements,minArea,minDistance,speed,typmode,weight,union, function(data) { 
-		jsonObject = requester.getJSON(data);
+		jsonObject = data;//requester.getJSON(data);
+		console.log("data="+data);
 		
 		var myStyle = {
 				"fill": "green",
@@ -261,12 +262,12 @@ function updateMap(mode, minx, miny, maxx, maxy,scale,maxTypify,fixElements,minA
 		}).addTo(map);
 
 		//setView for first call
-		if(firstCall){
-			var bounds = d3.geo.bounds(jsonObject);
-			map.setView([bounds[0][1]+((bounds[1][1]-bounds[0][1])/2), bounds[0][0]+((bounds[1][0]-bounds[0][0])/2)],map.getZoom());
-			map.setView([46.035, 5.06], 11);
-			firstCall = false;
-		}
+		//if(firstCall){
+		//	var bounds = d3.geo.bounds(jsonObject);
+		//	map.setView([bounds[0][1]+((bounds[1][1]-bounds[0][1])/2), bounds[0][0]+((bounds[1][0]-bounds[0][0])/2)],map.getZoom());
+		//	mapsetView([51,13],11);//.setView([46.035, 5.06], 11);
+		//	firstCall = false;
+		//}
 		
 		if(save==1){
 			window.open('data:text/json;charset=utf-8,' + data, "_blank ", "width=300, height=200");	

@@ -14,6 +14,9 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
+import com.infomatiq.jsi.Rectangle;
+import com.infomatiq.jsi.SpatialIndex;
+import com.infomatiq.jsi.rtree.RTree;
 import com.vividsolutions.jts.algorithm.MinimumDiameter;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -318,12 +321,50 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 		 }else treeSize = tree.size();
 	 }
 	 }
-	 
-	 
-	
-	 
+
 	 System.out.println(remC + " removed");
 	 polygonList = tree.query(env);
+	 
+	 if(typmode==3){
+		 
+		 SpatialIndex si = new RTree(); 
+		 si.init(null);
+		 for(int f = 0; f<polygonList.size();f++){
+			 float minx=(float) polygonList.get(f).getEnvelopeInternal().getMinX();
+			 float miny=(float) polygonList.get(f).getEnvelopeInternal().getMinY();
+			 float maxx=(float) polygonList.get(f).getEnvelopeInternal().getMaxX();
+			 float maxy=(float) polygonList.get(f).getEnvelopeInternal().getMaxY();
+			 si.add(new Rectangle(minx,miny,maxx,maxy), f);
+		 }
+		 while(si.size()>maxTyp){
+			//stupid - jsi just searches nN for given point -> useless
+			 
+			 
+			 
+		 }
+		 
+		 
+		 
+		 
+	 }
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
+	 
 	 //save deleted or replaced polygons to see the difference
 	 watchTotal.stop();
 	 System.out.println("total calc time for typification (in ms): "+ watchTotal.getElapsedTime());
@@ -460,6 +501,7 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 	 		tree.insert(polygons[i].getEnvelopeInternal(),polygons[i]); //save indexes to delete them
 	 		
 	 	}
+	 	tree.build();
 	 	polygonList = useNearestNeighborTypification(tree, env, maxTyp, typmode,weight);
 	 return polygonList;
  }
@@ -521,7 +563,11 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 		 for(int j = 0; j<length;j++){
 			 if(i!=j && polygons.get(i).intersects(polygons.get(j))){
 				 intersectC ++;
+				 try{
 				 polygons.set(i,(Polygon) polygons.get(i).union(polygons.get(j)));
+				 }catch(Exception e){
+					System.out.println("skiped merge MP"); 
+				 }
 				 polygons.remove(j);
 				 length --;
 				 j--;
