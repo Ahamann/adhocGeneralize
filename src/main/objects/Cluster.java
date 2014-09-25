@@ -42,17 +42,13 @@ public class Cluster {
 	
 	//Envelope env = new Envelope(4.756050109863281, 45.920587344733654, 5.404586791992187, 46.157718401427566);//(0,44,10,48);//(5.095574855804443, 45.94613670749096, 5.1361083984375, 45.960980373948985);  //
 	
-	
 	Envelope env = Container.getsavedTrees().get(0).getEnvelope();
 	STRtree tree = Container.getsavedTrees().get(0).getTree(env);//getTree();
-	
-	
-	
 	
 	List <Cluster> clusterList = new ArrayList<Cluster>();
 	int step=0;
 	DistancePolygons dist = new DistancePolygons(0); //it takes some time to process with weighting
-	 System.out.println(tree.size());
+	System.out.println(tree.size());
 	 
 	 
 	 

@@ -65,7 +65,7 @@ public class TreeWorker {
 			System.out.println("couldnt create folder: " + e);
 		}
 		//read original json file to get polygons
-		jsonString = GeoJsonReader.readFile(jsonPath);
+		jsonString = GeoJsonReader.readFile2(jsonPath);    //2 if threaded file reader
 		//convert String to Polygon[]
 		polygons = PolygonWorker.json2polygons(jsonString);
 		//write every polygon in separate json file and save envelope + path in json Tree

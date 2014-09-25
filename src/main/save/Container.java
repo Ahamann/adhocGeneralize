@@ -17,7 +17,7 @@ public class Container {
 
 	//Constants
 	//Path
-	public static String pathOrig = "C:\\GenData\\lakes_lyon.geojson ";
+	public static String pathOrig = "C:\\GenData\\lakes_lyon.geojson";
 	//lakes_lyon.geojson - not bad
 	//france_water.geojson - too big
 	//germany_water.geojson - too big

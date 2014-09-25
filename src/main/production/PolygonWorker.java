@@ -61,9 +61,11 @@ public class PolygonWorker {
 		featureNode = fullNode.path("features");
 		//name = fullNode.path("name").asText();
 		
+		
 		//outer loop for features/polygons
 		jsonPolygons = new Polygon[featureNode.size()];
 		for (int i= 0; i< featureNode.size() ; i++){ //TODO: length of loop
+			
 			JsonNode coordNode;
 			coordNode = featureNode.get(i).findValue("coordinates").get(0);
 			if(coordNode.size()==1)coordNode=coordNode.get(0); //go deeper if multipolygon
