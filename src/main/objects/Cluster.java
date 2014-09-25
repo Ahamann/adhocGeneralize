@@ -47,13 +47,19 @@ public class Cluster {
 	
 	List <Cluster> clusterList = new ArrayList<Cluster>();
 	int step=0;
+	int size = tree.size();
 	DistancePolygons dist = new DistancePolygons(0); //it takes some time to process with weighting
 	System.out.println(tree.size());
 	 
-	 
+	 int oldsize =0;
 	 
 	 while(tree.size()>1){
-		 System.out.println(tree.size()+" treesize");
+		 
+		 if (tree.size()<size/100*80)System.out.println(step);
+		 if(tree.size()==oldsize)System.out.println("stuck at "+tree.size()); 
+		 else oldsize = tree.size();
+		 
+		 //System.out.println(tree.size()+" treesize");
 		 Object[] nearest = tree.nearestNeighbour(dist);
 		 Polygon a = (Polygon) nearest[0];
 		 Polygon b = (Polygon) nearest[1];
@@ -94,11 +100,11 @@ public class Cluster {
 		 	//totalEnv.expandToInclude(b.getEnvelopeInternal());
 		 	//totalEnv.expandToInclude(newPolygon.getEnvelopeInternal());
 		 	
-		 	System.out.println(clusterList.size()+" size");
+		 	System.out.println("tree ="+tree.size()+" cluster="+clusterList.size());
 		 	for(int j =0; j<clusterList.size();j++){
 		 		//look if polygon A or B is already a cluster - if yes, put it as child to new cluster and remove old cluster - otherwise create new cluster for a and b
 		 		if(clusterList.get(j).getStructure()==a){
-		 			System.out.println("A ALT");
+		 			//System.out.println("A ALT");
 		 			newCluster.setChildA(clusterList.get(j));
 		 			foundA=true;
 		 			clusterList.remove(j);j--;
@@ -106,7 +112,7 @@ public class Cluster {
 		 		
 		 		if(j>=0){
 		 			if(clusterList.get(j).getStructure()==b){
-		 				System.out.println("B ALT");
+		 				//System.out.println("B ALT");
 			 			newCluster.setChildB(clusterList.get(j));
 			 			foundB=true;
 			 			clusterList.remove(j);j--;
@@ -120,7 +126,7 @@ public class Cluster {
 		 	}
 		 	//A isnt an existing cluster - create new
 		 	if(!foundA){
-		 		System.out.println("A NEU");
+		 		//System.out.println("A NEU");
 		 		Cluster newA = new Cluster();
 		 		newA.setExtent(a.getEnvelopeInternal());
 		 		newA.setStructure(a);
@@ -128,7 +134,7 @@ public class Cluster {
 		 	}
 		 	//A isnt an existing cluster - create new
 		 	if(!foundB){
-		 		System.out.println("B NEU");
+		 		//System.out.println("B NEU");
 		 		Cluster newB = new Cluster();
 		 		newB.setExtent(b.getEnvelopeInternal());
 		 		newB.setStructure(b);
@@ -144,7 +150,7 @@ public class Cluster {
 	 }
 	 
 	
-	 System.out.println(clusterList.size());
+	 //System.out.println(clusterList.size());
 	 //clusterList.get(0).setExtent(maxExtent);
 	 return clusterList;
 }

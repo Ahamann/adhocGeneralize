@@ -37,20 +37,15 @@ public class StartController implements ServletContextListener {
 	public void contextInitialized(ServletContextEvent arg0) {
 		Watch time = new Watch();
 		time.start();
-		System.out.println("create tree... (this could take a while - depending on input filesize)");
+		System.out.println("Server startet - create tree... (this could take a while - depending on input filesize)");
 		//create tree
 		String pathOrig = Container.pathOrig;
 		String pathFolder = Container.pathFolder;
 		String name = Container.name;
 		String type = Container.type;
 		Factory.createTree(0, pathOrig, pathFolder, name, type);
-		time.stop();
-		System.out.println("server startet: "+ time.getElapsedTime() +"ms");
-		
-		
-		
-		
-		System.out.println("CH-Test");
+		System.out.println("tree created in : "+ time.getElapsedTime() +"ms");
+		System.out.println("create cluster... for mode 9");
 		try {
 			 Container.setCluster(Cluster.clusterH());;
 		} catch (IOException e) {
@@ -58,7 +53,8 @@ public class StartController implements ServletContextListener {
 			e.printStackTrace();
 			System.out.println("fail");
 		}
-		System.out.println("done");
+		System.out.println("server fully loaded in : "+ time.getElapsedTime() +"ms");
+		time.stop();
 	}
 		
 		

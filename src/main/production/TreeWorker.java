@@ -71,8 +71,11 @@ public class TreeWorker {
 		//write every polygon in separate json file and save envelope + path in json Tree
 		for(int i=0;i<polygons.length;i++){
 			path = saveFolder+"\\"+i+".json";
-			GeoJsonWriter.writeJsonToFile(polygons[i], path, name, type, i);
-			jsonTree.insert(polygons[i].getEnvelopeInternal(), path);
+			if(polygons[i]!=null){
+				GeoJsonWriter.writeJsonToFile(polygons[i], path, name, type, i);
+				jsonTree.insert(polygons[i].getEnvelopeInternal(), path);
+			}
+			
 		}
 		jsonTree.build(); //TODO:is build necessary for RTREE?
 		polygons = null;

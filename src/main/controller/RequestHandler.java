@@ -252,8 +252,7 @@ public class RequestHandler {
 			if(cluster.size()>=maxPolygons)break;
 			Cluster visit = cluster.get(i);
 			if (parameter.getEnv().intersects(visit.getExtent()) || visit.getExtent().intersects(parameter.getEnv())){
-				System.out.println(i);
-				
+								
 				if(visit.getChildA()!=null && visit.getChildB()!=null){
 					cluster.add(visit.getChildA());
 					cluster.add(visit.getChildB());

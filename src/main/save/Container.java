@@ -17,11 +17,11 @@ public class Container {
 
 	//Constants
 	//Path
-	public static String pathOrig = "C:\\GenData\\lakes_lyon.geojson";
+	public static String pathOrig = "C:\\GenData\\smallSax_forest.geojson";
 	//lakes_lyon.geojson - not bad
 	//france_water.geojson - too big
 	//germany_water.geojson - too big
-	//saxony_forest.geojson - too big
+	//saxony_forest.geojson - too big - clusterH taks like 30-50 min - threading necessary
 	//building_tud.geojson
 	//smallSax_forest.geojson
 	//sax_water.geojson

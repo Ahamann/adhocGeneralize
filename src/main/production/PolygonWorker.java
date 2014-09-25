@@ -82,9 +82,14 @@ public class PolygonWorker {
 					tempCoords[j] = tempCoord;
 					//}		
 			}
-			LinearRing shell = geometryFactory.createLinearRing(tempCoords);
-			Polygon tempPoly = geometryFactory.createPolygon(shell, null);
-			jsonPolygons[i] = tempPoly;
+			try{
+				LinearRing shell = geometryFactory.createLinearRing(tempCoords);
+				Polygon tempPoly = geometryFactory.createPolygon(shell, null);
+				jsonPolygons[i] = tempPoly;
+			}catch(Exception e){
+				System.out.println("strange polygon was found - skip");
+			}
+			
 		}
 		return jsonPolygons;
 	}
@@ -486,7 +491,13 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 		 //set at
 		 AffineTransformation at = AffineTransformationFactory.createFromControlVectors(srcMin,srcMax,srcCentroid,finalMin,finalMax,destCentroid);
 		 //tranform and create new Polygon
-		 Polygon newPolygon = 	 (Polygon) at.transform(a);
+		 Polygon newPolygon = null;
+		 try{
+			  newPolygon = 	 (Polygon) at.transform(a);
+		 }catch(Exception e){
+			return a;
+		 }
+		
 	 return newPolygon;
  }
  
