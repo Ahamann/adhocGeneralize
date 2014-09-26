@@ -50,10 +50,11 @@ public class Servlet extends HttpServlet {
 		String typmode = (String) request.getParameter("typmode");
 		String weight = (String) request.getParameter("weight");
 		String union = (String) request.getParameter("union");
+		String simplify = (String) request.getParameter("simplify");
 		
 		
 		//if ( modeString.equals("0")){
-			String json = RequestHandler.getJson(modeString, minxString, minyString, maxxString, maxyString, scaleString, maxTypifyString, fixElementsString, minAreaString, minDistanceString,speed,typmode,weight,union);
+			String json = RequestHandler.getJson(modeString, minxString, minyString, maxxString, maxyString, scaleString, maxTypifyString, fixElementsString, minAreaString, minDistanceString,speed,typmode,weight,union,simplify);
 			response.setContentType("application/json");
 			response.setCharacterEncoding("utf-8");
 			//response.setHeader("Content-Encoding", "gzip");

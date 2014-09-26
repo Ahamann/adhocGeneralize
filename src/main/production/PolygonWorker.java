@@ -8,6 +8,7 @@ import java.util.Timer;
 import main.helper.Watch;
 import main.objects.Cluster;
 import main.objects.DistancePolygons;
+import main.production.writer.GeoJsonWriter;
 import main.save.TempParameterContainer;
 
 import org.codehaus.jackson.JsonNode;
@@ -29,6 +30,7 @@ import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.strtree.GeometryItemDistance;
 import com.vividsolutions.jts.index.strtree.ItemDistance;
 import com.vividsolutions.jts.index.strtree.STRtree;
+import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
 import com.vividsolutions.jts.geom.util.AffineTransformationFactory;
 /**
@@ -464,7 +466,7 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
  public static Polygon clusterPolygons(Polygon a, Polygon b){	 
 	
 		 //get ratio
-		 double  translationTolerance = 0.5; // 1 = normal - the bigger the number the bigger the shift of the polygon
+		 double  translationTolerance = 0.6; // 1 = normal - the bigger the number the bigger the shift of the polygon
 		 double ratio = a.getArea() / b.getArea();
 		 ratio= ratio/translationTolerance;
 		 //get centroid - centre of gravity
@@ -687,6 +689,27 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 			}
 		}
 		return cluster;
+ }
+ 
+ public static String simplifyBasedOnString (List<Polygon> poly, String jsonString, double scale, double speed, String name, String type) throws IOException{
+	 double startTol = 0.0005; //0.0005 is normal // 0.01 is a lot
+	 int steps = 1;
+	 List<Polygon> polygons = poly;
+	 double transfer= jsonString.length()/1024*8/speed;
+		System.out.println("time="+transfer +" with "+polygons.size() +" polygons");
+			while(transfer>5){
+				double distanceTolerance = (startTol*steps) * scale / 100000; //5mm  //0.0005
+				for(int b=0;b<polygons.size();b++){
+					polygons.set(b, (Polygon) TopologyPreservingSimplifier.simplify(polygons.get(b), distanceTolerance));				
+				}
+				jsonString= GeoJsonWriter.getJsonString(polygons, name, type);
+				transfer= jsonString.length()/1024*8/speed;
+				steps++;
+			}
+			System.out.println(steps-1+" times simplified");
+	 return jsonString;
+	 
+	 
  }
  
 }

@@ -19,6 +19,8 @@ import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.strtree.STRtree;
+import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
+import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 
 /**
  * Class handles front end requests, gets polygons based on extent+zoom level and generalizes them based on chosen operation.
@@ -68,7 +70,7 @@ public class RequestHandler {
 	 * @throws JsonMappingException 
 	 * @throws JsonParseException 
 	 */
-	public static String getJson(String modeS, String minxS, String minyS, String maxxS, String maxyS, String scaleS, String maxTypifyS, String fixElementsS, String minAreaS, String minDistanceS,String speedS,String typmodeS, String weightS,String unionS) throws JsonParseException, JsonMappingException, IOException{
+	public static String getJson(String modeS, String minxS, String minyS, String maxxS, String maxyS, String scaleS, String maxTypifyS, String fixElementsS, String minAreaS, String minDistanceS,String speedS,String typmodeS, String weightS,String unionS,String simplifyS) throws JsonParseException, JsonMappingException, IOException{
 		int mode = 0;
 		double scale = 0; 
 		double minx =-180;
@@ -86,6 +88,7 @@ public class RequestHandler {
 		int typmode = 0;  //set modus of typify 0= recreate tree after nn with new polygon - 1 = delete 2 nodes and insert new one after nn
 		double weight = 0;
 		int union = -1;
+		int simplify= 1;
 		//new parameter 
 		//maxTypifyS
 		//fixElementsS
@@ -110,6 +113,7 @@ public class RequestHandler {
 			if(!typmodeS.isEmpty())typmode = Integer.parseInt(typmodeS);	x++;
 			if(!weightS.isEmpty())weight = Double.parseDouble(weightS);	x++;
 			if(!unionS.isEmpty())union = Integer.parseInt(unionS);	x++;
+			if(!simplifyS.isEmpty())simplify = Integer.parseInt(simplifyS);	x++;
 		}catch(Exception e){
 			System.out.println("could not parse parameter input: "+e.getMessage() + " Pos="+x);
 		}
@@ -131,7 +135,7 @@ public class RequestHandler {
 
 		//switch between generalization modes
 		System.out.println(minx+" "+miny+" "+maxx+" "+maxy);
-		
+		List<Polygon> polygons = null;
 		switch(mode){
 		case 0:
 			//normal request - get polygons based on extent	
@@ -175,15 +179,15 @@ public class RequestHandler {
 //			System.out.println("amount of points per polygon:" + size/arrayPoly5.length);
 			
 			List<Polygon> listPoly5 = PolygonWorker.useSelection(arrayPoly5, parameter.getEnv(), parameter.getMaxElementsSel());
-			List<Polygon> listPoly5_2 = PolygonWorker.useNearestNeighborTypification(listPoly5, parameter.getEnv(), parameter.getMaxElementsTyp(), typmode,weight);
-			listPoly5_2 = PolygonWorker.mergeOverlaps(listPoly5_2);
-			listPoly5_2 = PolygonWorker.useAreaSelection(listPoly5_2, parameter.getMinArea());			
+			 polygons = PolygonWorker.useNearestNeighborTypification(listPoly5, parameter.getEnv(), parameter.getMaxElementsTyp(), typmode,weight);
+			 polygons = PolygonWorker.mergeOverlaps(polygons);
+			 polygons = PolygonWorker.useAreaSelection(polygons, parameter.getMinArea());			
 //			double size2=0;
 //			for (int a = 0; a<listPoly5_2.size();a++){
 //				size2 +=listPoly5_2.get(a).getCoordinates().length;
 //			}
 //			System.out.println("amount of points per polygon:" + size2/listPoly5_2.size());
-			jsonString= GeoJsonWriter.getJsonString(listPoly5_2, treeW.getName(), treeW.getType());
+			jsonString= GeoJsonWriter.getJsonString(polygons, treeW.getName(), treeW.getType());
 			double size= jsonString.length()/1024;
 			System.out.println("json length ~ " + size +"kb /// estimated download time with "+parameter.getSpeed() +"kbps = "+size*8/parameter.getSpeed() );
 			break;
@@ -198,10 +202,10 @@ public class RequestHandler {
 			if(a<0)a=0;
 			List<Polygon> listPoly6 = PolygonWorker.useSelection(arrayPoly6, parameter.getEnv(), parameter.getMaxElementsSel()+a);
 			listPoly6 = PolygonWorker.unionPolygons(listPoly6, parameter.getEnv(), a);
-			List<Polygon> listPoly6_2 = PolygonWorker.useNearestNeighborTypification(listPoly6, parameter.getEnv(), parameter.getMaxElementsTyp(), typmode,weight);
-			listPoly6_2 = PolygonWorker.mergeOverlaps(listPoly6_2);
-			listPoly6_2 = PolygonWorker.useAreaSelection(listPoly6_2, parameter.getMinArea());
-			jsonString= GeoJsonWriter.getJsonString(listPoly6_2, treeW.getName(), treeW.getType());
+			 polygons = PolygonWorker.useNearestNeighborTypification(listPoly6, parameter.getEnv(), parameter.getMaxElementsTyp(), typmode,weight);
+			 polygons = PolygonWorker.mergeOverlaps(polygons);
+			 polygons = PolygonWorker.useAreaSelection(polygons, parameter.getMinArea());
+			jsonString= GeoJsonWriter.getJsonString(polygons, treeW.getName(), treeW.getType());
 			
 			break;
 		case 7: //get min Rectangle Diameter
@@ -228,7 +232,7 @@ public class RequestHandler {
 		Envelope aktE= parameter.getEnv();
 		System.out.println("searchE: minx="+aktE.getMinX()+ " miny="+aktE.getMinY()+ " maxx="+aktE.getMaxX()+ " maxy="+aktE.getMaxY());
 		
-		List<Polygon> polygons = new ArrayList<Polygon>();
+		polygons = new ArrayList<Polygon>();
 		
 		int maxPolygons = parameter.getMaxElementsTyp();
 		
@@ -280,10 +284,45 @@ public class RequestHandler {
 		jsonString= GeoJsonWriter.getJsonString(polygons, treeW.getName(), treeW.getType());
 			
 		
+//		double file= jsonString.length()/1024*8/parameter.getSpeed();
+//		if(file>10){
+//			System.out.println("reduce file size from "+jsonString.length()/1024);
+//			jsonString="";
+//			double distanceTolerance = 0.01 * parameter.getScale() / 100000; //5mm  //0.0005
+//			for(int b=0;b<polygons.size();b++){
+//				polygons.set(b, (Polygon) TopologyPreservingSimplifier.simplify(polygons.get(b), distanceTolerance));				
+//			}
+//			System.out.println("distanceTolerance :"+ distanceTolerance);
+//			jsonString= GeoJsonWriter.getJsonString(polygons, treeW.getName(), treeW.getType());
+//			System.out.println("reduced file size from to "+(jsonString.length()/1024));
+//		}
+//		
 		break;
 			
 	
 	}
+		
+		//simplify for 5,6,9
+		
+		//simplify if transfer rate is to high
+		if((mode==5 || mode==6 || mode==9) && simplify==1 ){
+			PolygonWorker.simplifyBasedOnString(polygons, jsonString, parameter.getScale(), parameter.getSpeed(), treeW.getName(), treeW.getType());
+			
+//			double transfer= jsonString.length()/1024*8/parameter.getSpeed();
+//			System.out.println("time="+transfer +" with "+polygons.size() +" polygons");
+//				while(transfer>5){
+//					double distanceTolerance = (startTol*steps) * parameter.getScale() / 100000; //5mm  //0.0005
+//					for(int b=0;b<polygons.size();b++){
+//						polygons.set(b, (Polygon) TopologyPreservingSimplifier.simplify(polygons.get(b), distanceTolerance));				
+//					}
+//					jsonString= GeoJsonWriter.getJsonString(polygons, treeW.getName(), treeW.getType());
+//					transfer= jsonString.length()/1024*8/parameter.getSpeed();
+//					steps++;
+//				}
+//				System.out.println(steps-1+" times simplified");
+		}
+		
+
 		double size6= jsonString.length()/1024;
 		System.out.println("json length ~ " + size6 +"kb /// estimated download time with "+parameter.getSpeed() +"kbps = "+size6*8/parameter.getSpeed() );
 		return jsonString;	

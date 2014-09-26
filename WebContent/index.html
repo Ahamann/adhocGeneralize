@@ -65,7 +65,7 @@ overflow : auto;
 //http://localhost:8080/gengit/?mode=5&speed=0&typmode=&area=0.0005&toggle=0&scale=1000000&typify=80
 
 //base map
-var map = L.map('map').setView([46.035, 5.06], 11);//([51,13],11); //([46.035, 5.06], 11)
+var map = L.map('map').setView([46.035, 5.06], 11);                          //([57.2,14.55],9);<-sweden                 //([46.035, 5.06], 11)<-lyon
 var cloudmade = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
 							attribution: 'bla',
 							}).addTo(map);	
@@ -98,6 +98,7 @@ var save =  getURLParam("save");
 var typmode =  getURLParam("typmode");
 var weight =  getURLParam("weight");
 var union =  getURLParam("union");
+var simplify =  getURLParam("simplify");
 
 if(mode=="")mode=0;
 if(fixScale=="")fixScale=0;
@@ -110,6 +111,7 @@ if(speed=="")speed=320;
 if(typmode=="")typmode=1;
 if(weight=="")weight=2;
 if(union=="")union=-1;
+if(simplify=="")simplify=1;
 
 //last Extent
 if(toggleLastExtent==1){	
@@ -217,7 +219,7 @@ function dragMap(){
 	}
 
 	//call map request
-	updateMap(mode, minx, miny, maxx, maxy,scale,maxTypify,fixElements,minArea,minDistance,speed,typmode,weight,union);
+	updateMap(mode, minx, miny, maxx, maxy,scale,maxTypify,fixElements,minArea,minDistance,speed,typmode,weight,union,simplify);
 	
 	//temp
 	// 1km² = 1000000m²
@@ -232,12 +234,12 @@ function dragMap(){
 
 
 
-function updateMap(mode, minx, miny, maxx, maxy,scale,maxTypify,fixElements,minArea,minDistance,speed,typmode,weight,union){
+function updateMap(mode, minx, miny, maxx, maxy,scale,maxTypify,fixElements,minArea,minDistance,speed,typmode,weight,union,simplify){
 	//get start time
 	var now = new Date();
 	var timebegin = now.getTime();
 	
-	requester.dataBaseRequest(mode, minx, miny, maxx, maxy,scale,maxTypify,fixElements,minArea,minDistance,speed,typmode,weight,union, function(data) { 
+	requester.dataBaseRequest(mode, minx, miny, maxx, maxy,scale,maxTypify,fixElements,minArea,minDistance,speed,typmode,weight,union,simplify, function(data) { 
 		jsonObject = data;//requester.getJSON(data);
 		console.log("data="+data);
 		
