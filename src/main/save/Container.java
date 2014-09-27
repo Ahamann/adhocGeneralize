@@ -1,38 +1,20 @@
 package main.save;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import main.objects.Cluster;
 import main.production.TreeWorker;
 
-
-
 /**
- * Class to save constants, objects and especially TreeWorkers
+ * Class to save constants, objects and especially TreeWorkers + ClusterHierarchie
+ * check path for different files
  * @author Bernd Grafe
  *
  */
 public class Container {
 
-	//Constants
+	//Parameters
 	//Path
-	public static String pathOrig = "C:\\GenData\\lakes_lyon.geojson";        //sweden_lakes.geojson";   \\lakes_lyon.geojson
-	//lakes_lyon.geojson - not bad 
-	//france_water.geojson - too big
-	//germany_water.geojson - too big
-	//saxony_forest.geojson - too big - clusterH taks like 30-50 min - threading necessary
-	//building_tud.geojson
-	//smallSax_forest.geojson
-	//sax_water.geojson
-	//wald.geojson    //stupid osm polygons are cut off
-	//wasser.geojson  //boring ds
-	//denmark_Forest.geojson
-	//sweden_lakes.geojson //good  NY_Buildings.geojson
-	//forest_SACHSEN.geojson" 7 min - some cut offf polygons
-	//NY_Buildings.geojson
-	
-	
+	public static String pathOrig = "C:\\GenData\\lakes_lyon.geojson";        //sweden_lakes.geojson";   //lakes_lyon.geojson
 	public static String pathFolder = "C:\\GenData\\rEntries";
 	public static String name = "water";
 	public static String type = "FeatureCollection";
@@ -51,7 +33,7 @@ public class Container {
 		savedTreeWorker.add(tree);
 	}
 	
-	
+	//Cluster
 	public static void setCluster (List<Cluster>c){
 		cluster = c;
 	}

@@ -4,6 +4,11 @@ import java.util.List;
 
 import main.production.io.GeoJsonReader;
 
+/**
+ * Thread to read list-string from file faster
+ * @author Bernd Grafe
+ *
+ */
 public class threadReader implements Runnable{
 	List<String> list; int start; int stop;int no;
 	String text;

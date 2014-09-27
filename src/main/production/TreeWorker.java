@@ -16,7 +16,7 @@ import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.strtree.STRtree;
 
 /**
- * Class with STRtree data structure - should be saved in container to get 
+ * Class with STRtree data structure - should be saved in container
  * 
  * @author Bernd Grafe
  *

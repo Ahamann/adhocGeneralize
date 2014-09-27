@@ -14,8 +14,14 @@ import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.index.strtree.STRtree;
 
+/**
+ * A CLuster - Cluster Hierarchy binary construction to save the typification to use on the fly.
+ * it has 2 children cluster
+ *
+ * @author Bernd Grafe
+ *
+ */
 public class Cluster {
-	
 	List<Cluster> list;
 	int step;	
 	Cluster childA;
@@ -23,84 +29,61 @@ public class Cluster {
 	Polygon structure;
 	Envelope extent;
 	
-	
+	/**
+	 * compute clustering based on str-tree nearest neighbor
+	 * @return List of 1 Cluster - with every other cluster as children
+	 * @throws JsonParseException
+	 * @throws JsonMappingException
+	 * @throws IOException
+	 */
 	public static List <Cluster> clusterH () throws JsonParseException, JsonMappingException, IOException{
-//		GeometryFactory geometryFactory = new GeometryFactory();
-//		Coordinate[] coord = {new Coordinate(1,1),new Coordinate(1,2),new Coordinate(1,4),new Coordinate(1,7),new Coordinate(1,1)};
-//		LinearRing shell = geometryFactory.createLinearRing(coord);
-//		Polygon tempPoly = geometryFactory.createPolygon(shell, null);
-//		Polygon a= tempPoly;
-//		
-//		if(a==tempPoly)System.out.println("Nu");
-	
-//	Polygon[] poly = Container.getsavedTrees().get(0).getPolygons();
-//	List<Polygon> list = Arrays.asList(poly);
-//	STRtree tree = new STRtree();
-//	for(int i =0; i<list.size();i++){
-//		tree.insert(list.get(i).getEnvelopeInternal(), i);
-//	}
-	
-	//Envelope env = new Envelope(4.756050109863281, 45.920587344733654, 5.404586791992187, 46.157718401427566);//(0,44,10,48);//(5.095574855804443, 45.94613670749096, 5.1361083984375, 45.960980373948985);  //
-	
-	Envelope env = Container.getsavedTrees().get(0).getEnvelope();
-	STRtree tree = Container.getsavedTrees().get(0).getTree(env);//getTree();
-	
-	List <Cluster> clusterList = new ArrayList<Cluster>();
-	int step=0;
-	int size = tree.size();
-	DistancePolygons dist = new DistancePolygons(0); //it takes some time to process with weighting
-	System.out.println(tree.size());
-	 
-	 int oldsize =0;
-	 
-	 while(tree.size()>1){
+		Envelope env = Container.getsavedTrees().get(0).getEnvelope();
+		STRtree tree = Container.getsavedTrees().get(0).getTree(env);//getTree();
 
-		 if(tree.size()==oldsize)System.out.println("stuck at "+tree.size()); 
-		 else oldsize = tree.size();
-		 if(tree.size()==size/100*25)System.out.println("75%");
-		 if(tree.size()==size/100*50)System.out.println("50%");
-		 if(tree.size()==size/100*75)System.out.println("25%");
+		List <Cluster> clusterList = new ArrayList<Cluster>();
+		int step=0;
+		int size = tree.size();
+		DistancePolygons dist = new DistancePolygons(0); //it takes some time to process with weighting
+		System.out.println(tree.size());
+		int oldsize =0;
+	 
+		while(tree.size()>1){
+			//just progress info
+			if(tree.size()==oldsize)System.out.println("stuck at "+tree.size()); 
+			else oldsize = tree.size();
+			if(tree.size()==size/100*25)System.out.println("75%");
+			if(tree.size()==size/100*50)System.out.println("50%");
+			if(tree.size()==size/100*75)System.out.println("25%");
 		 
-		 //System.out.println(tree.size()+" treesize");
-		 Object[] nearest = tree.nearestNeighbour(dist);
-		 Polygon a = (Polygon) nearest[0];
-		 Polygon b = (Polygon) nearest[1];
-		 if(a.getArea()<b.getArea()){
-			 Polygon c = b; //temp save biggest
-			 b =  a; // b = smallest
-			 a = c; // a = biggest
-		 }
-		 Polygon newPolygon = PolygonWorker.clusterPolygons(a,b);
-		 tree.remove(((Polygon) nearest[0]).getEnvelopeInternal(), ((Polygon) nearest[0]));
-		 tree.remove(((Polygon) nearest[1]).getEnvelopeInternal(), ((Polygon) nearest[1]));
-		 @SuppressWarnings("unchecked")
-		List<Polygon> polygonListTemp = tree.query(env);
-		 tree = new STRtree();
+			//get nearest neighbor
+			//System.out.println(tree.size()+" treesize");
+			Object[] nearest = tree.nearestNeighbour(dist);
+			Polygon a = (Polygon) nearest[0];
+			Polygon b = (Polygon) nearest[1];
+			if(a.getArea()<b.getArea()){
+				Polygon c = b; //temp save biggest
+				b =  a; // b = smallest
+				a = c; // a = biggest
+			}
+			//cluster / typify and remove from tree
+			Polygon newPolygon = PolygonWorker.clusterPolygons(a,b);
+			tree.remove(((Polygon) nearest[0]).getEnvelopeInternal(), ((Polygon) nearest[0]));
+			tree.remove(((Polygon) nearest[1]).getEnvelopeInternal(), ((Polygon) nearest[1]));
+			//create new tree with new cluster
+			@SuppressWarnings("unchecked")
+			List<Polygon> polygonListTemp = tree.query(env);
+			tree = new STRtree();
 		 	//add array to STRtree
 		 	for (int i = 0; i<polygonListTemp.size();i++){
 		 		tree.insert(polygonListTemp.get(i).getEnvelopeInternal(),polygonListTemp.get(i)); //save indexes to delete them
 		 	}
 		 	tree.insert(newPolygon.getEnvelopeInternal(),newPolygon);
 		 	tree.build();
-		 
+		 	
+		 	//add 2 nearest polygons and cluster to cluster hierarchy
 		 	Cluster newCluster = new Cluster();
 		 	boolean foundA =false;
 		 	boolean foundB =false;
-		 	
-		 	//Envelope need to be the total envelope of both objects to get the objects properly
-//		 	Envelope totalEnv = a.getEnvelopeInternal();
-//		 	totalEnv.expandToInclude(b.getEnvelopeInternal().getMinX(), a.getEnvelopeInternal().getMinY());
-//		 	totalEnv.expandToInclude(b.getEnvelopeInternal().getMinX(), a.getEnvelopeInternal().getMaxY());
-//		 	totalEnv.expandToInclude(b.getEnvelopeInternal().getMaxX(), a.getEnvelopeInternal().getMaxY());
-//		 	totalEnv.expandToInclude(b.getEnvelopeInternal().getMaxX(), a.getEnvelopeInternal().getMinY());
-//		 	
-//		 	totalEnv.expandToInclude(newPolygon.getEnvelopeInternal().getMinX(), newPolygon.getEnvelopeInternal().getMinY());
-//		 	totalEnv.expandToInclude(newPolygon.getEnvelopeInternal().getMinX(), newPolygon.getEnvelopeInternal().getMaxY());
-//		 	totalEnv.expandToInclude(newPolygon.getEnvelopeInternal().getMaxX(), newPolygon.getEnvelopeInternal().getMaxY());
-//		 	totalEnv.expandToInclude(newPolygon.getEnvelopeInternal().getMaxX(), newPolygon.getEnvelopeInternal().getMinY());
-		 	
-		 	//totalEnv.expandToInclude(b.getEnvelopeInternal());
-		 	//totalEnv.expandToInclude(newPolygon.getEnvelopeInternal());
 		 	
 		 	System.out.println("tree ="+tree.size()+" cluster="+clusterList.size());
 		 	for(int j =0; j<clusterList.size();j++){
@@ -111,7 +94,6 @@ public class Cluster {
 		 			foundA=true;
 		 			clusterList.remove(j);j--;
 		 		}
-		 		
 		 		if(j>=0){
 		 			if(clusterList.get(j).getStructure()==b){
 		 				//System.out.println("B ALT");
@@ -120,12 +102,11 @@ public class Cluster {
 			 			clusterList.remove(j);j--;
 			 		}
 		 		}
-		 		
 		 		if(foundA==true && foundB==true){
-		 			
 		 			break; //if true both were cluster, and are now in new cluster
 		 		}
 		 	}
+		 	
 		 	//A isnt an existing cluster - create new
 		 	if(!foundA){
 		 		//System.out.println("A NEU");
@@ -142,18 +123,15 @@ public class Cluster {
 		 		newB.setStructure(b);
 		 		newCluster.setChildB(newB);
 		 	}
+		 	//expand envelope, to select elements on map properly
 		 	Envelope newE = newCluster.getChildA().getExtent();
 		 	newE.expandToInclude(newCluster.getChildB().getExtent());
-		 	
+		 	//add polygon cluster, save step for recreation
  			newCluster.setExtent(newE);
  			newCluster.setStructure(newPolygon);
  			newCluster.setStep(step);step++;
 		 	clusterList.add(newCluster);	 	
 	 }
-	 
-	
-	 //System.out.println(clusterList.size());
-	 //clusterList.get(0).setExtent(maxExtent);
 	 return clusterList;
 }
 	

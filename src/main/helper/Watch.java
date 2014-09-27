@@ -1,5 +1,10 @@
 package main.helper;
 
+/**
+ * litlle helper class to measure time
+ * @author Bernd Grafe
+ *
+ */
 public class Watch {
 	private long startTime = 0;
     private long stopTime = 0;

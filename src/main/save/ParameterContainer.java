@@ -21,7 +21,7 @@ public class ParameterContainer {
 	double time; //s
 	//double ratio;	//ratio Selection / Typification
 	int maxTyp;		//better than ratio? max amount of typifications
-	double minDist; //min distance
+	double minDist; //min distance in map[mm]
 	double minArea; //min Area
 	int maxElementsTotal; 	//max Elements 
 	int maxElementsSel;		//max E. for Selection
@@ -30,7 +30,6 @@ public class ParameterContainer {
 	//int scale;				//scale for zoomlevel
 	int fixScale;	//radical law, given scale
 	int fixCount;	//radical law, given amount of elements
-	
 	public static double scaleStatic;
 	
 	/**
@@ -51,37 +50,32 @@ public class ParameterContainer {
 		maxY=may;
 		scaleStatic=scale;
 		env=new Envelope(minX,maxX,minY,maxY);
-		
 		speed = 0;
 		maxTyp = 30;   // about 180ms per nN search
 		time = 5;
 		
-		//min Distance not implemented
-		minDist = 0; //not used
+		//min Distance used for merging
+		minDist = 0.0005; //0.5mm
+		//double dist = 0.003 * scale / 100000;
+		//System.out.println(dist+"=max dist in m");
+		
 		
 		//min Area calc based on % - NOW based on map length max 1mm
-		
 		//double height = env.getHeight();
 		//double width = env.getWidth();
 		//double area = height*width;
 		//minArea = area/100*0.005 ; //threshold to deselect / 0.005% of Extent
+		
 		//set min area  0,16mm² or 0,5mm² - with 0,4mm or 0,7mm edge length sounds quiet small
 		double minMapLength = 0.001; // in m//= 1mm
 		double realLength = minMapLength * scale / 100000; //in m , translated to coord unit which is 1 = 100km  //realcoords - 1,0 = 100km -> 1m = 0,00001  //100m -> 0,001
 		minArea = realLength * realLength;
 		
-		
-		//double dist = 0.003 * scale / 100000;
-		//System.out.println(dist+"=max dist in m");
-		
 		//based on bertins generalisation - input for radical law (töpfer)
 		fixScale = 1000000;
 		fixCount = 135;
-		
 		calcRLaw ();
 		System.out.println("scale: "+scale);
-		
-		
 	} 
 
 	/**
@@ -95,14 +89,12 @@ public class ParameterContainer {
 	
 	/**
 	 * set max number of elements based on speed/transfer rate - based on average data file size and file size for polygons
-	 * @param s
+	 * @param s in kbps
 	 */
 	public void setSpeed(double s){
 		speed = s; //in kb/s
 		//* with: x=2sec/8*380kbps -> x=95kbyte [1byte=8bit][sek=kbyte*8/kbps] / 1sec->45kbyte /4sec->190kbyte
-		
 		double maxDataSize = time / 8 * speed;  //1byte = 8 bit   //in kbyte
-		
 		//calculate max polygons based on normal data file - estimated
 		// header+body without polygon ~ 300 byte 
 		// polygons -> 1 Point = 24 Byte (with 7 decimal places) + 1 Byte comma    = 25 Bytes
@@ -110,11 +102,9 @@ public class ParameterContainer {
 		// 18 Points per Polygon * 25 Bytes = 450 Bytes per Polygon
 		// head+body = 300bytes   / 1 polygon = 450 bytes
 		maxDataSize = maxDataSize*1024; //kbyte in byte
-		
 		//new calc - head = 55bytes // polygon = 62 bytes (name etc) + points + 176 bytes (properties)
 		System.out.println("ds max="+maxDataSize +"byte");
 		//int maxCountSpeed = (int) ((maxDataSize - 55)/(450+62+176)); //this is only valid for normal polygons, not generalized
-		
 		//generalized polygons are bigger the bigger the scale
 		//200000 -> 48
 		//100000 -> 44
@@ -181,6 +171,16 @@ public class ParameterContainer {
 		calcRLaw ();
 	}
 	
+	/**
+	 * set minimum area
+	 * @param minArea in map[mm] default=0.001
+	 */
+	public void setMinArea(double minArea) {
+		double minMapLength =minArea;// 0.001; // in m//= 1mm
+		double realLength = minMapLength * scale / 100000; //in m , translated to coord unit which is 1 = 100km  //realcoords - 1,0 = 100km -> 1m = 0,00001  //100m -> 0,001
+		this.minArea = realLength * realLength;
+	}
+	
 	// generic Setters and Getters
 	
 	public void setScale(double scale) {
@@ -202,11 +202,7 @@ public class ParameterContainer {
 		this.time=time;
 	}
 	
-	public void setMinArea(double minArea) {
-		double minMapLength =minArea;// 0.001; // in m//= 1mm
-		double realLength = minMapLength * scale / 100000; //in m , translated to coord unit which is 1 = 100km  //realcoords - 1,0 = 100km -> 1m = 0,00001  //100m -> 0,001
-		this.minArea = realLength * realLength;
-	}
+
 	
 	
 	public int getMode() {
@@ -290,7 +286,10 @@ public class ParameterContainer {
 		return minDist;
 	}
 
-
+	/**
+	 * set min distance
+	 * @param minDist in map[mm} default=0.0005
+	 */
 	public void setMinDist(double minDist) {
 		this.minDist = minDist;
 	}

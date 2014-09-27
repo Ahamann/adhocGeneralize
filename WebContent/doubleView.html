@@ -1,19 +1,14 @@
-
 <!DOCTYPE html>
-<meta charset="utf-8">
 <html>
+<meta charset="utf-8">
 <head>
 <script src="js/d3/d3.v3.min.js"></script>
 <script src="js/leaflet/leaflet.js"></script>
 <script type="text/javascript" src="js/requester.js"></script>
 <script type="text/javascript" src="js/jquery/jquery-1.11.0.js"></script>
-
-
  <style>
   @import url(js/leaflet/leaflet.css);
-  
   body,html{height:100%;}
-  
   #map {
    width: 600px;
    height: 600px;
@@ -22,9 +17,6 @@
    width: 600px;
    height: 600px;
   }
-
-
-
   path {
    fill: blue;
    fill-opacity: .2;
@@ -35,21 +27,12 @@
    fill: green;
    fill-opacity: .7;
   }
-/**
- * Popup
- */ 
-
-
 .leaflet-popup-content
 {
-	margin: 0;
-	
-											
+	margin: 0;												
 word-wrap: break-word;
 height: 100px;
-overflow : auto;
-																	
-					
+overflow : auto;																						
 }
 .leaflet-div-icon {
 	background: #fff;
@@ -58,41 +41,35 @@ overflow : auto;
  </style>
 </head>
 <body>
-
-
-
-
 <table><tr>
 <td><div id=map></div></td>
 <td><div id=map2></div></td>
 </tr></table>
-
-
-
 <script type="text/javascript">
 //http://localhost:8080/gengit/?mode=5&speed=0&typmode=&area=0.0005&toggle=0&scale=1000000&typify=80
-
-//base map
-var map = L.map('map').setView([46.035, 5.06], 11);                       //([57.2,14.55],9);<-sweden                 //([46.035, 5.06], 11)<-lyon
-var cloudmade = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-							attribution: 'bla',
-							}).addTo(map);	
-var baseLayers = {"base": cloudmade};	
-L.control.layers(baseLayers).addTo(map);
-
+// left map
+var map = L.map('map').setView([46.035, 5.06], 11);   //([57.2,14.55],9);<-sweden    //([46.035, 5.06], 11)<-lyon
 var mapWidth = map.getSize().x
 	mapHeigth = map.getSize().y
 	menuHeight = 100;
 map.on('dragend', dragMap);     //call function when draging map
 map.on('zoomend', dragMap);		//call function when zooming map
-L.control.scale().addTo(map);
-
+//L.control.scale().addTo(map);
+//right map
+var mapp = L.map('map2', { zoomControl:false }).setView([46.035, 5.06], 11)
+$.getJSON("./data/lakesBetter.geojson", function(data) {   	// sweden_lakes.geojson    //lakesBetter.geojson - must be in Folder ./WebContent/data
+	var jsonLayer = new L.geoJson(data, {
+		onEachFeature: function (feature, layer) {
+	        layer.bindPopup(feature);
+	      }		
+	});
+	jsonLayer.addTo(mapp);		
+});
 
 var firstCall=true;
 //json Layer
 var jsonObject;
 var jsonLayer;
-
 //getParameters
 var mode=getURLParam("mode");					//mode / preset no.
 var fixScale = getURLParam("scale");			//set scale
@@ -107,7 +84,7 @@ var typmode =  getURLParam("typmode");
 var weight =  getURLParam("weight");
 var union =  getURLParam("union");
 var simplify =  getURLParam("simplify");
-
+var showmap = getURLParam("map");
 if(mode=="")mode=0;
 if(fixScale=="")fixScale=0;
 if(toggleLastExtent=="")toggleLastExtent=0;
@@ -120,6 +97,7 @@ if(typmode=="")typmode=1;
 if(weight=="")weight=2;
 if(union=="")union=-1;
 if(simplify=="")simplify=1;
+if(showmap=="")showmap=0;
 
 //last Extent
 if(toggleLastExtent==1){	
@@ -131,32 +109,24 @@ if(toggleLastExtent==1){
 	var fixMaxX =tempMaxll.lng;
 	var fixMaxY =tempMaxll.lat; 
 }
-
+//show background map
+if(showmap==1){
+	//left map
+	var cloudmade = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+	attribution: 'bla',
+	}).addTo(map);	
+	//var baseLayers = {"base": cloudmade};	
+	L.control.layers(baseLayers).addTo(map);
+	// right map
+	var cloudmadee = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+		attribution: 'normal',
+		}).addTo(mapp);	
+	//var baseLayerss = {"base": cloudmadee};	
+}
 
 dragMap();
-
-
-
-
-
-
-//second map
-var mapp = L.map('map2', { zoomControl:false }).setView([45.9, 4.9], 11)
-var cloudmadee = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-							attribution: 'normal',
-							}).addTo(mapp);	
-var baseLayerss = {"base": cloudmadee};	
-$.getJSON("./data/lakesBetter.geojson", function(data) {   // sweden_lakes.geojson    //lakesBetter.geojson
-	var jsonLayer = new L.geoJson(data, {
-		onEachFeature: function (feature, layer) {
-	        layer.bindPopup(feature);
-	      }
-				
-});
-
-jsonLayer.addTo(mapp);	
-});
 drag2nd();
+//drag right map if left map is moved
 map.on('move', drag2nd);
 mapp.dragging.disable();
 mapp.touchZoom.disable();
@@ -166,6 +136,7 @@ mapp.boxZoom.disable();
 mapp.keyboard.disable();
 
 
+//functions
 
 function drag2nd(){
 	mapp.setZoom(map.getZoom());
@@ -173,53 +144,7 @@ function drag2nd(){
 	
 }
 
-/* //first request to get json
-requester.dataBaseRequest(mode, 4.9,  45.9, 5.3,  46.2, zoom, function(data) { 
-
-
-	
-		jsonObject = requester.getJSON(data);					
-		//console.log("hm:" + jsonObject.name);
-
-		var myStyle = {
-			"fill": "blue",
-		   "fill-opacity": ".2",
-		   "stroke": "#000",
-		   "stroke-width":  "1.5px",
-			};												//overwritten by path (styles)
-			
-		jsonLayer = L.geoJson(jsonObject, {
-			onEachFeature: function (feature, layer) {
-		        //layer.bindPopup(feature.geometry.type);
-				//layer.bindPopup(feature.properties.envelope);
-				
-				
-				layer.bindPopup("<b>Coordinates:</b> " +feature.geometry.coordinates);
-						
-
-						
-		      }
-			//style: myStyle	
-		}).addTo(map);
-	//	var testLayers = {"test": jsonLayer};	
-	//	L.control.layers(testLayers).addTo(map);
-		var bounds = d3.geo.bounds(jsonObject);
-		map.setView([bounds[0][1]+((bounds[1][1]-bounds[0][1])/2), bounds[0][0]+((bounds[1][0]-bounds[0][0])/2)],map.getZoom());
-
-});  */
-
-
-
-
 function dragMap(){
-
-	//set min / max coordinates - set coordinates for first call / set last extent as new extent if toggled otherwise get actual extent
-	//if(firstCall){
-	//	var minx =4.9;
-	//	var miny =45.9; 
-	//	var maxx =5.3;
-	//	var maxy =46.2; 
-	//} else{
 		if(toggleLastExtent==1){
 			var minx = fixMinX
 			var miny = fixMinY; 
@@ -236,8 +161,6 @@ function dragMap(){
 			var maxx =maxll.lng;
 			var maxy =maxll.lat; 
 		}
-	//}
-	//get PPI / DPI
 	//get DPI / PPI for scale calculation
 	var div = document.createElement("div");
 	div.style.width="1in";
@@ -262,29 +185,20 @@ function dragMap(){
 
 	//call map request
 	updateMap(mode, minx, miny, maxx, maxy,scale,maxTypify,fixElements,minArea,minDistance,speed,typmode,weight,union,simplify);
-	
-	//temp
-	// 1km² = 1000000m²
-	// 
-	//var minMapLength = 0.01; //in m //= 1mm 
-	//var realLength = minMapLength * scale / 100000; //in m , tranlated to coord unit which is 1 = 100km  //realcoords - 1,0 = 100km -> 1m = 0,00001  //100m -> 0,001
-	//var minArea = realLength * realLength;
-	//console.log("minArea = "+ minArea);
+
 	console.log("latitude = "+ (map.getBounds().getNorthEast().lat+map.getBounds().getSouthWest().lat)/2);
 	console.log("longitude = "+ (map.getBounds().getNorthEast().lng+map.getBounds().getSouthWest().lng)/2);
 }
 
 
-
+//json request
 function updateMap(mode, minx, miny, maxx, maxy,scale,maxTypify,fixElements,minArea,minDistance,speed,typmode,weight,union,simplify){
 	//get start time
 	var now = new Date();
 	var timebegin = now.getTime();
-	
 	requester.dataBaseRequest(mode, minx, miny, maxx, maxy,scale,maxTypify,fixElements,minArea,minDistance,speed,typmode,weight,union,simplify, function(data) { 
 		jsonObject = data;//requester.getJSON(data);
 		console.log("data="+data);
-		
 		var myStyle = {
 				"fill": "green",
 			   "fill-opacity": ".2",
@@ -304,15 +218,6 @@ function updateMap(mode, minx, miny, maxx, maxy,scale,maxTypify,fixElements,minA
 		      }
 			//style: myStyle	
 		}).addTo(map);
-
-		//setView for first call
-		//if(firstCall){
-		//	var bounds = d3.geo.bounds(jsonObject);
-		//	map.setView([bounds[0][1]+((bounds[1][1]-bounds[0][1])/2), bounds[0][0]+((bounds[1][0]-bounds[0][0])/2)],map.getZoom());
-		//	mapsetView([51,13],11);//.setView([46.035, 5.06], 11);
-		//	firstCall = false;
-		//}
-		
 		if(save==1){
 			window.open('data:application/json;charset=utf-8,' +JSON.stringify(data), "_blank ", "width=300, height=200");	
 		}
@@ -322,19 +227,14 @@ function updateMap(mode, minx, miny, maxx, maxy,scale,maxTypify,fixElements,minA
 		var total = timeend -timebegin;
 		console.log ("total request time " + (total)/1000  +"sec");
 }); 
-	
-	
-	
-	
 }
 
+//get parameters
 function getURLParam(name) {
 	name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
-
 	var regexS = "[\\?&]" + name + "=([^&#]*)";
 	var regex = new RegExp( regexS );
 	var results = regex.exec( window.location.href );
-
 	if ( results == null )
 		return "";
 	else
@@ -342,6 +242,5 @@ function getURLParam(name) {
 }
 	
 </script>
-
 </body>
 </html>

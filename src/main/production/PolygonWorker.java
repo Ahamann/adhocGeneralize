@@ -3,19 +3,14 @@ package main.production;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-
 import main.helper.Watch;
 import main.objects.Cluster;
 import main.objects.DistancePolygons;
 import main.production.io.GeoJsonWriter;
-import main.save.ParameterContainer;
-
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
-
 import com.vividsolutions.jts.algorithm.MinimumDiameter;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -24,8 +19,6 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Point;
 import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.index.strtree.GeometryItemDistance;
-import com.vividsolutions.jts.index.strtree.ItemDistance;
 import com.vividsolutions.jts.index.strtree.STRtree;
 import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 import com.vividsolutions.jts.geom.util.AffineTransformation;
@@ -42,7 +35,7 @@ public class PolygonWorker {
 	 * json node -> feature node -> coord values -> Coordinate -> Coordinate[] -> LinearRing -> Polygon -> Polygon[]
 	 * 
 	 * @param jsonString
-	 * @return
+	 * @return array of polygons
 	 * @throws JsonParseException
 	 * @throws JsonMappingException
 	 * @throws IOException
@@ -59,12 +52,9 @@ public class PolygonWorker {
 		fullNode = m.readTree(jsonString);
 		featureNode = fullNode.path("features");
 		//name = fullNode.path("name").asText();
-		
-		
 		//outer loop for features/polygons
 		jsonPolygons = new Polygon[featureNode.size()];
 		for (int i= 0; i< featureNode.size() ; i++){ //TODO: length of loop
-			
 			JsonNode coordNode;
 			coordNode = featureNode.get(i).findValue("coordinates").get(0);
 			if(coordNode.size()==1)coordNode=coordNode.get(0); //go deeper if multipolygon
@@ -72,11 +62,8 @@ public class PolygonWorker {
 			Coordinate[] tempCoords = new Coordinate[coordNode.size()];
 			for (int j = 0; j< coordNode.size();j++){
 					//if ( coordNode.get(j)!=null){
-
 					double x = coordNode.get(j).get(0).asDouble();
 					double y = coordNode.get(j).get(1).asDouble();
-					
-					
 					Coordinate tempCoord = new Coordinate(x,y);
 					tempCoords[j] = tempCoord;
 					//}		
@@ -95,18 +82,15 @@ public class PolygonWorker {
 	
 	
 	/**
-	 * select polygon based on extent area
+	 * select polygon based on extent area and max elements
 	 * @param polygons
-	 * @param env
-	 * @param maxSelect
-	 * @return
+	 * @param env Extent
+	 * @param maxSelect max Elements to Select
+	 * @return list of selected polygons
 	 */
 	public static List<Polygon> useSelection(Polygon[] polygons, Envelope env, int maxSelect){
-
 		List<Polygon>  polygonList= new ArrayList<Polygon>();
 		System.out.println("polyLength: "+polygons.length + " /max Polygons : "+ maxSelect);
-		
-		
 			if( maxSelect < polygons.length){
 				System.out.println("show only "+maxSelect+" biggest  / sort...");
 				Polygon[] sortedSmall = bubbleSort(polygons, false);
@@ -119,7 +103,6 @@ public class PolygonWorker {
 					 polygonList.add(polygons[j]);
 				 }
 			 }
-		
 		return polygonList;
 	}
 	
@@ -128,8 +111,8 @@ public class PolygonWorker {
 	 * bigger gets bigger typification - sort polygons, biggest first - search surroundings for  biggest polygons
 	 * increase (buffer) and delete smaller ones 
 	 * @param polygons
-	 * @param env
-	 * @return
+	 * @param env Extent
+	 * @return list of strange typified polygons
 	 * @deprecated
 	 */
  public static List<Polygon> useTypification(Polygon[] polygons, Envelope env){
@@ -194,54 +177,15 @@ public class PolygonWorker {
 	 	return polygonList;	 
  }
 	
- 
- 
- /*
-  * termination condition for max polygons/filesize based on transfer rate and average file size per polygon
-  * 
-  * gprs(54kbps),edge(260kbps).umts(380kbps),hsdpa(>3.2mbps)
-  * 
-  * max loading time should be 5 sec (reference?)
-  * 
-  * with: x=2sec/8*380kbps -> x=95kbyte [1byte=8bit][sek=kbyte*8/kbps] / 1sec->45kbyte /4sec->190kbyte
-  * 
-  * head per file ~ 296 byte - 1Polygon ~ 22 + comma 1
-  * 
-  * average amount of points per polygon per file => total 1174 files = 863.955 bytes(843kbytes) => 735.91 bytes per file => (-296 header / 23) = 19 Points = 1 Polygon
-  * 
-  * 2 sec / 95kbyte(97280byte) with 735.91byte per file = 132 Polygons
-  * 4 sec / 190kbyte(194560byte) with 735.91byte per file = 264 Polygons
-  * 
-  * -----------------------
-  * 
-  * termination condition for max polygons based on töpfers radical law
-  * 
-  * based on given scale with given amount of polygons
-  * 
-  * polygons = givenPolygons*SQRT(givenScale/scale) - scale given by actual envelope/bbox
-  * 
-  * 
-  * there is no reference for different scales:
-  * 
-  * based on dataset with scale 1:10k -> ~ 61 polygons (50-80 polygons depending on bbox)
-  * with ~ 365 polygons at 1:25k
-  * with 1:25k -> 1:10k - result would be 230
-  * with 1:10k (70) -> 1:25 - result would be 110 !!!
-  * 
-  * 
-  * -> aesthetic vs performance
-  */
- 
- ////new Typification - nearest distances from RTREE -> Clustering - delet old ones - but save centre of gravity and are
- //// new location based on all centres with area weighting + aff. transformation for biggest polygon + growth based on other areas
- ////based on nearest neighbor
- ////based on smallest area
+
  /**
-  * Typification based on nearest neighbor / centre of gravity / area weight / clustering / max amount of objects
-  * @param tree
-  * @param env
-  * @param maxTyp
-  * @return
+  * Typification based on nearest neighbor (str-tree) with or without orientation weighting / centre of gravity / area weight / clustering / max amount of objects
+  * @param tree STRtree with polygons
+  * @param env	Extent
+  * @param maxTyp max elements to typify
+  * @param typmode 0=create new tree after(recommended, especially with weighting) nN; 1=replace polygons in old str-tree 
+  * @param weight weight distance:orientation with 1:x for nearest neighbor
+  * @return list of typified polygons
   */
  @SuppressWarnings("unchecked")
 public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelope env, Integer maxTyp, Integer typmode, double weight){
@@ -260,7 +204,6 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 		int treeSize=  tree.size();
 	 
 	 if (typmode==0){ // nN -> delete 2 old polygons, create new one - insert all poylgons in new tree
-
 	 while(tree.size()>maxTyp){
 		 watchnN.start();
 		 Object[] nearest = tree.nearestNeighbour(dist);
@@ -274,8 +217,6 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 			 b =  a; // b = smallest
 			 a = c; // a = biggest
 		 }
-
-		 
 		 Polygon newPolygon = clusterPolygons(a,b);
 		 tree.remove(((Polygon) nearest[0]).getEnvelopeInternal(), ((Polygon) nearest[0]));
 		 tree.remove(((Polygon) nearest[1]).getEnvelopeInternal(), ((Polygon) nearest[1]));
@@ -295,11 +236,8 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 	 }else treeSize = tree.size();
 	 }
 	 }
-	 if (typmode ==1){
 	 
-	
-		 
-	 //delete 2 nodes , add 1
+	 if (typmode ==1){	 //delete 2 nodes , add 1
 	 while(tree.size()>maxTyp){ //delete 2 old polygons, insert new one - in same tree
 		 watchnN.start();
 		 Object[] nearest = tree.nearestNeighbour(dist);
@@ -331,26 +269,6 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 
 	 System.out.println(remC + " removed");
 	 polygonList = tree.query(env);
-	 
-
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
-	 
 	 //save deleted or replaced polygons to see the difference
 	 watchTotal.stop();
 	 System.out.println("total calc time for typification (in ms): "+ watchTotal.getElapsedTime());
@@ -359,19 +277,27 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
  }
  
  
+ /**
+  * merge polygons based on max steps and min distance in map[m] + scale
+  * @param polygons
+  * @param env
+  * @param steps
+  * @param scale
+  * @param distTol
+  * @return merged polygons
+  */
  @SuppressWarnings("unchecked")
- public static List<Polygon> unionPolygons (List<Polygon> polygons, Envelope env, Integer steps,double scale){
+ public static List<Polygon> unionPolygons (List<Polygon> polygons, Envelope env, Integer steps,double scale, double distTol){
 	List<Polygon> polygonList =new ArrayList<Polygon>();
 	 Watch watchU = new Watch();
 	 watchU.start();
 	 STRtree tree = new STRtree();
 	 	//add array to STRtree
 	 	for (int i = 0; i<polygons.size();i++){
-	 		tree.insert(polygons.get(i).getEnvelopeInternal(),polygons.get(i)); //save indexes to delete them
-	 		
+	 		tree.insert(polygons.get(i).getEnvelopeInternal(),polygons.get(i)); //save indexes to delete them	
 	 	}
-	 	
 	 //merging
+	 	System.out.println("max steps = " + steps);
 	 	int treeSize = tree.size();
 	 	int max = treeSize - steps;
 	 	int actualStep=0;
@@ -381,13 +307,11 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 			 Polygon a = (Polygon) nearest[0];
 			 Polygon b = (Polygon) nearest[1];
 			 double distance = a.distance(b);
-			 double distanceTolerance = 0.0005 * scale / 100000;
+			 double distanceTolerance = distTol * scale / 100000; //0.0005
 			 if (distanceTolerance>distance){
 				 System.out.println("max union tolerance reached.");
 				 break;
 			 }
-			 
-			 
 			 a = (Polygon) a.buffer(distance);
 			 b = (Polygon) b.buffer(distance);
 			 Polygon c = (Polygon) a.union(b);
@@ -395,7 +319,7 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 			 //double dis = (a.distance(b))*100000/ TempParameterContainer.scaleStatic;
 			//System.out.println((dis*1000)+"mm");
 		
-
+			 //old convex hull
 //			 GeometryFactory geometryFactory = new GeometryFactory();
 //			 Geometry newGeom =  a.union(b);
 //			 newGeom = newGeom.convexHull();
@@ -403,7 +327,7 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 //			 LinearRing shell = geometryFactory.createLinearRing(coords);
 //			 Polygon newPolygon = geometryFactory.createPolygon(shell, null);
 			 
-			 
+			 //remove in tree, create new one with merged polygon
 			 tree.remove(((Polygon) nearest[0]).getEnvelopeInternal(), ((Polygon) nearest[0]));
 			 tree.remove(((Polygon) nearest[1]).getEnvelopeInternal(), ((Polygon) nearest[1]));
 			 List<Polygon> polygonListTemp = tree.query(env);
@@ -426,30 +350,17 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 		 watchU.stop();
 		 System.out.println("union for "+actualStep +" polygons done in:"+watchU.getElapsedTime());
 		return polygonList;
-	 
-	 
-	 
  }
  
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
+
  
  /**
-  * polygon clustering based on centroid and area
-  * @param a
-  * @param b
-  * @return
+  * polygon clustering based on centroid and area - affine transformation = typification of 2 polygons
+  * @param a bigger Polygon (area)
+  * @param b smaller Polygon (area)
+  * @return clustered/typified polygon
   */
  public static Polygon clusterPolygons(Polygon a, Polygon b){	 
-	
 		 //get ratio
 		 double  translationTolerance = 0.6; // 1 = normal - the bigger the number the bigger the shift of the polygon
 		 double ratio = a.getArea() / b.getArea();
@@ -483,14 +394,18 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 			  newPolygon = 	 (Polygon) at.transform(a);
 		 }catch(Exception e){
 			return a;
-		 }
-		
+		 }	
 	 return newPolygon;
  }
  
+
  /**
-  * Typification based on nearest neighbor / centre of gravity / area weight / clustering
-  * @param polygons
+  * calls equivalent method but with Polygon[] input
+  * @param polygons Array of Polygons
+  * @param env
+  * @param maxTyp
+  * @param typmode
+  * @param weight
   * @return
   */
  public static List<Polygon> useNearestNeighborTypification(Polygon[] polygons, Envelope env, Integer maxTyp, Integer typmode,double weight){
@@ -506,11 +421,14 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 	 return polygonList;
  }
  
+
  /**
-  * Typification based on nearest neighbor / centre of gravity / area weight / clustering
+  * calls equivalent method but with List<Polygon> input
   * @param polygons
   * @param env
-  * @param zoom
+  * @param maxTyp
+  * @param typmode
+  * @param weight
   * @return
   */
  public static List<Polygon> useNearestNeighborTypification(List<Polygon> polygons, Envelope env, Integer maxTyp, Integer typmode,double weight){
@@ -524,8 +442,8 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
  /**
   * sort an array of polygons, decreasing or increasing
   * @param polygons
-  * @param biggestFirst
-  * @return
+  * @param biggestFirst true=sort decreasing, false=increasing
+  * @return sorted polygons
   */
  private static Polygon[] bubbleSort(Polygon[] polygons, boolean biggestFirst){
 	 Polygon temp;
@@ -551,9 +469,9 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
  }
  
  /**
-  * merge polygon when overlaps occurs
+  * merge polygons when overlaps occurs
   * @param polygons
-  * @return
+  * @return merged polygons
   */
  public static List<Polygon> mergeOverlaps (List<Polygon> polygons){
 	 int length = polygons.size();
@@ -584,7 +502,7 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
   * returns polygon list with polygons bigger than min area
   * @param polygons
   * @param minArea
-  * @return
+  * @return min area selected polygons
   */
  public static List<Polygon> useAreaSelection(List<Polygon> polygons, double minArea){
 		List<Polygon>  polygonList= new ArrayList<Polygon>();
@@ -597,7 +515,11 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 	}
  
  
- 
+ /**
+  * returns diameter and supported segment as polygons
+  * @param polygons
+  * @return diameter and supp. segments
+  */
  public static List<Polygon> giveDiameter (List<Polygon> polygons){
 	List<Polygon>  polygonList= new ArrayList<Polygon>();
  	GeometryFactory geometryFactory = new GeometryFactory();
@@ -633,32 +555,27 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
  		}
 //		Coordinate a = coords[0];
 //		Coordinate b = coords[1];
-//		
 //		double sideA = b.x- a.x;
 //		double sideB = b.y- a.y;
-//		
 //		//double sideC = Math.sqrt(Math.pow(sideA,2) + Math.pow(sideB,2));
 //		//double alpha = Math.acos(  (Math.pow(sideB,2)+Math.pow(sideC,2)-Math.pow(sideA,2)) / 2 * sideB * sideC ) ;
 //		//double alphaDegree = alpha * 180 / Math.PI;
 //		double m = sideB / sideA;
 //		double alpha = Math.atan(m);
 //		double alphaDegree = alpha * 180 / Math.PI;
-		
-		
 //		System.out.println("ANGLE = " + alpha + "   /   "+alphaDegree ); // + clockwise - counter clockwise
-	}
-	 
-	 
-	 
-	 
-		
+	}	
 	return polygonList;
  }
  
  
  
  
- 
+ /**
+  * sorts decreasingly cluster based on step number
+  * @param cluster list of cluster
+  * @return sorted list of cluster
+  */
  public static List<Cluster> bubbleSortCluster(List<Cluster> cluster){
 	 Cluster temp;
 		for(int i=1; i<cluster.size(); i++) {
@@ -676,23 +593,37 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 		return cluster;
  }
  
+ /**
+  * Simplifies Polygons if transfer time is above 5 seconds recursevly
+  * @param poly
+  * @param jsonString to check length for transfer
+  * @param scale scale to calculate time
+  * @param speed in kbps to calculate time
+  * @param name of geoJSON to create new String
+  * @param type of geoJSON to create new String
+  * @return GeoJSON STring
+  * @throws IOException
+  */
  public static String simplifyBasedOnString (List<Polygon> poly, String jsonString, double scale, double speed, String name, String type) throws IOException{
 	 double startTol = 0.0005; //0.0005 is normal // 0.01 is a lot
 	 int steps = 1;
 	 List<Polygon> polygons = poly;
+	 String newJSON = "";
 	 double transfer= jsonString.length()/1024*8/speed;
 		System.out.println("time="+transfer +" with "+polygons.size() +" polygons");
 			while(transfer>5){
+				newJSON = "";
 				double distanceTolerance = (startTol*steps) * scale / 100000; //5mm  //0.0005
 				for(int b=0;b<polygons.size();b++){
 					polygons.set(b, (Polygon) TopologyPreservingSimplifier.simplify(polygons.get(b), distanceTolerance));				
 				}
-				jsonString= GeoJsonWriter.getJsonString(polygons, name, type);
-				transfer= jsonString.length()/1024*8/speed;
+				newJSON = GeoJsonWriter.getJsonString(polygons, name, type);
+				transfer= newJSON.length()/1024*8/speed;
+				System.out.println(transfer);
 				steps++;
 			}
 			System.out.println(steps-1+" times simplified");
-	 return jsonString;
+	 return newJSON;
 	 
 	 
  }
