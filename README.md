@@ -20,7 +20,7 @@ CONTENT
 
 #######################
 
-1. INSTALL
+# 1. INSTALL
 
 Download Eclipse JavaEE
 https://www.eclipse.org/downloads/packages/eclipse-ide-java-ee-developers/lunasr1
@@ -30,7 +30,7 @@ http://tomcat.apache.org/download-70.cgi
 
 #######################
 
-2. IMPORT PROJECT
+# 2. IMPORT PROJECT
 
 Download Project Zip-File and import to your workspace, open properties of project, 
 go to  project facets and choose Java, JavaScript and Dynamic Web Module.
@@ -49,7 +49,7 @@ WebContent/data/lakesBetter.geojson to C:\GenData\lakesBetter.geojson)
 
 #######################
 
-3. START
+# 3. START
 
 run as: Run on Server - choose Apache Tomcat - set your path or let Eclipse install a new version.
 (Hint double click on your server in Servers-Tab to change timeout time to something high because
@@ -58,7 +58,7 @@ creating cluster hierarchy and reading files can take some time - min 3min)
 
 #######################
 
-4. VIEW
+# 4. VIEW
 
 go to http://localhost:8080/[projectName] , where [projectName] ist most likely "adhocGeneralize"
 index.html - single view
@@ -66,7 +66,7 @@ doubleView - double view with generalized map left and normal map right
 
 #######################
 
-5. CHANGE DATA
+# 5. CHANGE DATA
 
 to change the input data, you need to drop you geojson-file to C:\GenData\
 (e.g. copy sweden_lakes.geojson from WebContent/data/ to C:\GenData)
@@ -76,7 +76,7 @@ for doubleView.html you need to change the path here to.
 
 #######################
 
-6. PARAMETERS/REQUEST
+# 6. PARAMETERS/REQUEST
 
 your url looks like this http://localhost:8080/[projectName]?parameter=value&parameter=value ...
 possible paremeters are listed below
@@ -109,6 +109,6 @@ Mode:
 
 #######################
 
-7. JACADOC
+# 7. JACADOC
 
 [ProjectName]/Javadoc/index.html
