@@ -611,6 +611,7 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 	 String newJSON = "";
 	 double transfer= jsonString.length()/1024*8/speed;
 		System.out.println("time="+transfer +" with "+polygons.size() +" polygons");
+		if(transfer<=5)return jsonString;
 			while(transfer>5){
 				newJSON = "";
 				double distanceTolerance = (startTol*steps) * scale / 100000; //5mm  //0.0005
