@@ -9,7 +9,7 @@ import main.helper.Watch;
 import main.objects.Cluster;
 import main.objects.DistancePolygons;
 import main.production.io.GeoJsonWriter;
-import main.save.TempParameterContainer;
+import main.save.ParameterContainer;
 
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
@@ -317,7 +317,7 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 		 //cluster a+ b
 		 Polygon newPolygon = clusterPolygons(a,b);
 		 //remove b (smallest)
-		 tree.remove(((Polygon) nearest[1]).getEnvelopeInternal(), ((Polygon) nearest[1]));
+		if(! tree.remove(((Polygon) nearest[1]).getEnvelopeInternal(), ((Polygon) nearest[1]))) System.out.println("remove error");
 		 //replace a (biggest) with newPolygon
 		 tree.replace(((Polygon) nearest[0]).getEnvelopeInternal(), ((Polygon) nearest[0]), newPolygon.getEnvelopeInternal(), newPolygon); 
 		 remC++;

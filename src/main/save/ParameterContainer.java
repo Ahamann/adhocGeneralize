@@ -7,7 +7,7 @@ import com.vividsolutions.jts.geom.Envelope;
  * @author Bernd Grafe
  *
  */
-public class TempParameterContainer {
+public class ParameterContainer {
 
 	//input necessary-mandatory 
 	int mode;		//presets no.
@@ -42,7 +42,7 @@ public class TempParameterContainer {
 	 * @param max
 	 * @param may
 	 */
-	public TempParameterContainer(int m, double s, double mix, double miy, double max, double may){
+	public ParameterContainer(int m, double s, double mix, double miy, double max, double may){
 		mode= m;
 		scale=s;
 		minX=mix;

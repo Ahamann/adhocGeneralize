@@ -13,7 +13,7 @@ import main.production.PolygonWorker;
 import main.production.TreeWorker;
 import main.production.io.GeoJsonWriter;
 import main.save.Container;
-import main.save.TempParameterContainer;
+import main.save.ParameterContainer;
 
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -78,7 +78,7 @@ public class RequestHandler {
 		double maxx =180;
 		double maxy =180;
 		String jsonString = "";	
-		TempParameterContainer parameter;
+		ParameterContainer parameter;
 		
 		int maxTyp = 0;
 		int maxElements = 0;
@@ -119,7 +119,7 @@ public class RequestHandler {
 		}
 		
 		//save parameters
-		parameter = new TempParameterContainer(mode, scale, minx, miny,maxx,maxy);
+		parameter = new ParameterContainer(mode, scale, minx, miny,maxx,maxy);
 		if(maxTyp!=0)parameter.setTypElements(maxTyp);
 		if(maxElements!=0)parameter.setMaxElements(maxElements);
 		if(speed!=0)parameter.setSpeed(speed);
