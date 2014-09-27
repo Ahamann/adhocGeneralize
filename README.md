@@ -81,31 +81,31 @@ for doubleView.html you need to change the path here to.
 your url looks like this http://localhost:8080/[projectName]?parameter=value&parameter=value ...
 possible paremeters are listed below
 
-mode = integer number from 0-9 (more information below), default = 0
-scale = double number for scale as 1:x, default = calculated based on ppi, latitude and zoom level
-speed = transfer rate in kbps, default = 320
-typify = maximum steps to typify (cluster to objects), default = 30
-elements = total elements maximum shown, default = calculated via radical law based on scale
-area = edge of square to calculate min area of poylgons to show on map in map[m] default = 0.001 (1mm)
-distance = max distance to merge polygons, default = 0.0005 (0.5mm)
-save = saves GeoJSON response from map if set to 1, default = 0
-typmode = modus of typification 0=create new str-tree after nN+cluster or 1=replace in same str-tree, default = 0
-weight = nN calculation based on distance and orientation with 1:x, default = 0
-union = integer number of maximum steps to merge polygons 0...x, default = -1 (deactivated)
-simplify = 1 (on) or 0 (off) - simplifies polygons if calculated transfer time is above 5 seconds, used for mode 5,6 and 9; default = 1
-map = 01 (on) or 0 (off) - show background map, default = 0
+* mode = integer number from 0-9 (more information below), default = 0
+* scale = double number for scale as 1:x, default = calculated based on ppi, latitude and zoom level
+* speed = transfer rate in kbps, default = 320
+* typify = maximum steps to typify (cluster to objects), default = 30
+* elements = total elements maximum shown, default = calculated via radical law based on scale
+* area = edge of square to calculate min area of poylgons to show on map in map[m] default = 0.001 (1mm)
+* distance = max distance to merge polygons, default = 0.0005 (0.5mm)
+* save = saves GeoJSON response from map if set to 1, default = 0
+* typmode = modus of typification 0=create new str-tree after nN+cluster or 1=replace in same str-tree, default = 0
+* weight = nN calculation based on distance and orientation with 1:x, default = 0
+* union = integer number of maximum steps to merge polygons 0...x, default = -1 (deactivated)
+* simplify = 1 (on) or 0 (off) - simplifies polygons if calculated transfer time is above 5 seconds, used for mode 5,6 and 9; default = 1
+* map = 01 (on) or 0 (off) - show background map, default = 0
 
 Mode:
-0 = all without any generalization (ungeneralized data)
-1 = selection - max Elements
-2 = old bigger gets bigger typification (not recommended)
-3 = typification
-4 = pre-selection,typification, overlaps merge
-5 = pre-selection, typification, overlaps merge, min area selection
-6 = pre-select, union with max dist, typification, overlaps merge, min area selection (recommended)
-7 = mode 5, shows diameter and supporting segments
-8 = mode 0, shows diameter and supporting segments
-9 = use pre processed cluster hierarchy (recommended)
+* 0 = all without any generalization (ungeneralized data)
+* 1 = selection - max Elements
+* 2 = old bigger gets bigger typification (not recommended)
+* 3 = typification
+* 4 = pre-selection,typification, overlaps merge
+* 5 = pre-selection, typification, overlaps merge, min area selection
+* 6 = pre-select, union with max dist, typification, overlaps merge, min area selection (recommended)
+* 7 = mode 5, shows diameter and supporting segments
+* 8 = mode 0, shows diameter and supporting segments
+* 9 = use pre processed cluster hierarchy (recommended)
 
 #######################
 
