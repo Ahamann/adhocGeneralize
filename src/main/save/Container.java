@@ -28,7 +28,9 @@ public class Container {
 	//wald.geojson    //stupid osm polygons are cut off
 	//wasser.geojson  //boring ds
 	//denmark_Forest.geojson
-	//sweden_lakes.geojson //good
+	//sweden_lakes.geojson //good  NY_Buildings.geojson
+	//forest_SACHSEN.geojson" 7 min - some cut offf polygons
+	//NY_Buildings.geojson
 	
 	
 	public static String pathFolder = "C:\\GenData\\rEntries";

@@ -2,7 +2,7 @@ package main.helper;
 
 import java.util.List;
 
-import main.production.reader.GeoJsonReader;
+import main.production.io.GeoJsonReader;
 
 public class threadReader implements Runnable{
 	List<String> list; int start; int stop;int no;

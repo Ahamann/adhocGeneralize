@@ -7,8 +7,8 @@ import java.util.List;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 
-import main.production.reader.GeoJsonReader;
-import main.production.writer.GeoJsonWriter;
+import main.production.io.GeoJsonReader;
+import main.production.io.GeoJsonWriter;
 import main.save.Container;
 
 import com.vividsolutions.jts.geom.Envelope;

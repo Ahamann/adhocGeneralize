@@ -3,10 +3,9 @@
 <meta charset="utf-8">
 <html>
 <head>
-<script src="js/d3/d3.v3.min.js"></script>
 <script src="js/leaflet/leaflet.js"></script>
 <script type="text/javascript" src="js/requester.js"></script>
-<script type="text/javascript" src="js/jquery/jquery-1.11.0.js"></script>
+<script type="text/javascript" src="js/jquery/jquery-1.11.0.min.js"></script>
 
 
  <style>
@@ -37,9 +36,7 @@
 
 .leaflet-popup-content
 {
-	margin: 0;
-	
-											
+	margin: 0;								
 word-wrap: break-word;
 height: 100px;
 overflow : auto;
@@ -50,6 +47,10 @@ overflow : auto;
 	background: #fff;
 	border: 1px solid #666;
 	}
+.leaflet-container {
+    background: #FFF;
+}
+
  </style>
 </head>
 <body>
@@ -66,11 +67,11 @@ overflow : auto;
 
 //base map
 var map = L.map('map').setView([46.035, 5.06], 11);                          //([57.2,14.55],9);<-sweden                 //([46.035, 5.06], 11)<-lyon
-var cloudmade = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-							attribution: 'bla',
-							}).addTo(map);	
-var baseLayers = {"base": cloudmade};	
-L.control.layers(baseLayers).addTo(map);
+//var cloudmade = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+//							attribution: 'bla',
+//							}).addTo(map);	
+//var baseLayers = {"base": cloudmade};	
+//L.control.layers(baseLayers).addTo(map);
 
 var mapWidth = map.getSize().x
 	mapHeigth = map.getSize().y

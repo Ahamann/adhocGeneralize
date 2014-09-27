@@ -18,7 +18,7 @@ import com.vividsolutions.jts.index.strtree.STRtree;
 import main.production.Factory;
 import main.production.PolygonWorker;
 import main.production.TreeWorker;
-import main.production.writer.GeoJsonWriter;
+import main.production.io.GeoJsonWriter;
 import main.save.Container;
 
 /**

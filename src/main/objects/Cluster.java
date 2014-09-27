@@ -102,7 +102,7 @@ public class Cluster {
 		 	//totalEnv.expandToInclude(b.getEnvelopeInternal());
 		 	//totalEnv.expandToInclude(newPolygon.getEnvelopeInternal());
 		 	
-		 	//System.out.println("tree ="+tree.size()+" cluster="+clusterList.size());
+		 	System.out.println("tree ="+tree.size()+" cluster="+clusterList.size());
 		 	for(int j =0; j<clusterList.size();j++){
 		 		//look if polygon A or B is already a cluster - if yes, put it as child to new cluster and remove old cluster - otherwise create new cluster for a and b
 		 		if(clusterList.get(j).getStructure()==a){

@@ -8,7 +8,7 @@ import java.util.Timer;
 import main.helper.Watch;
 import main.objects.Cluster;
 import main.objects.DistancePolygons;
-import main.production.writer.GeoJsonWriter;
+import main.production.io.GeoJsonWriter;
 import main.save.TempParameterContainer;
 
 import org.codehaus.jackson.JsonNode;
@@ -16,9 +16,6 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import com.infomatiq.jsi.Rectangle;
-import com.infomatiq.jsi.SpatialIndex;
-import com.infomatiq.jsi.rtree.RTree;
 import com.vividsolutions.jts.algorithm.MinimumDiameter;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -335,28 +332,7 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 	 System.out.println(remC + " removed");
 	 polygonList = tree.query(env);
 	 
-	 if(typmode==3){
-		 
-		 SpatialIndex si = new RTree(); 
-		 si.init(null);
-		 for(int f = 0; f<polygonList.size();f++){
-			 float minx=(float) polygonList.get(f).getEnvelopeInternal().getMinX();
-			 float miny=(float) polygonList.get(f).getEnvelopeInternal().getMinY();
-			 float maxx=(float) polygonList.get(f).getEnvelopeInternal().getMaxX();
-			 float maxy=(float) polygonList.get(f).getEnvelopeInternal().getMaxY();
-			 si.add(new Rectangle(minx,miny,maxx,maxy), f);
-		 }
-		 while(si.size()>maxTyp){
-			//stupid - jsi just searches nN for given point -> useless
-			 
-			 
-			 
-		 }
-		 
-		 
-		 
-		 
-	 }
+
 	 
 	 
 	 
@@ -384,7 +360,7 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
  
  
  @SuppressWarnings("unchecked")
- public static List<Polygon> unionPolygons (List<Polygon> polygons, Envelope env, Integer steps){
+ public static List<Polygon> unionPolygons (List<Polygon> polygons, Envelope env, Integer steps,double scale){
 	List<Polygon> polygonList =new ArrayList<Polygon>();
 	 Watch watchU = new Watch();
 	 watchU.start();
@@ -398,12 +374,20 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 	 //merging
 	 	int treeSize = tree.size();
 	 	int max = treeSize - steps;
+	 	int actualStep=0;
 	 	 DistancePolygons dist = new DistancePolygons(0);
 		 while(tree.size()>max){
 			 Object[] nearest = tree.nearestNeighbour(dist);
 			 Polygon a = (Polygon) nearest[0];
 			 Polygon b = (Polygon) nearest[1];
 			 double distance = a.distance(b);
+			 double distanceTolerance = 0.0005 * scale / 100000;
+			 if (distanceTolerance>distance){
+				 System.out.println("max union tolerance reached.");
+				 break;
+			 }
+			 
+			 
 			 a = (Polygon) a.buffer(distance);
 			 b = (Polygon) b.buffer(distance);
 			 Polygon c = (Polygon) a.union(b);
@@ -431,6 +415,7 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 			 	tree.insert(c.getEnvelopeInternal(),c);
 			 	tree.build();
 		 //System.out.println(remC + " / " + max +" / actual tree size="+tree.size());
+			 	actualStep++;
 		 if(treeSize == tree.size()){
 			 System.out.println("nN error");
 			 break;
@@ -439,7 +424,7 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 		 }
 		 polygonList = tree.query(env);
 		 watchU.stop();
-		 System.out.println("union for "+steps +" polygons done in:"+watchU.getElapsedTime());
+		 System.out.println("union for "+actualStep +" polygons done in:"+watchU.getElapsedTime());
 		return polygonList;
 	 
 	 

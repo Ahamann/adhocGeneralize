@@ -1,4 +1,4 @@
-package main.production.reader;
+package main.production.io;
 
 import java.io.BufferedReader;
 import java.io.File;

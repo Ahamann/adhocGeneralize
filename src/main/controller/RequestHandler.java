@@ -11,7 +11,7 @@ import main.objects.Cluster;
 import main.production.Factory;
 import main.production.PolygonWorker;
 import main.production.TreeWorker;
-import main.production.writer.GeoJsonWriter;
+import main.production.io.GeoJsonWriter;
 import main.save.Container;
 import main.save.TempParameterContainer;
 
@@ -201,7 +201,7 @@ public class RequestHandler {
 			else a=union;
 			if(a<0)a=0;
 			List<Polygon> listPoly6 = PolygonWorker.useSelection(arrayPoly6, parameter.getEnv(), parameter.getMaxElementsSel()+a);
-			listPoly6 = PolygonWorker.unionPolygons(listPoly6, parameter.getEnv(), a);
+			listPoly6 = PolygonWorker.unionPolygons(listPoly6, parameter.getEnv(), a, parameter.getScale());
 			 polygons = PolygonWorker.useNearestNeighborTypification(listPoly6, parameter.getEnv(), parameter.getMaxElementsTyp(), typmode,weight);
 			 polygons = PolygonWorker.mergeOverlaps(polygons);
 			 polygons = PolygonWorker.useAreaSelection(polygons, parameter.getMinArea());
