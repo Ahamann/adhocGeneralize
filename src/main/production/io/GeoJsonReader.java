@@ -69,7 +69,7 @@ public class GeoJsonReader {
 		//number of threads
 		int threadNumber = 4;
 		
-		
+		Thread[] array= new Thread[threadNumber];
 		int size= text.size();
 		str= new String [threadNumber];
 		int d = size/threadNumber;
@@ -78,11 +78,14 @@ public class GeoJsonReader {
 			int max = d*(i+1); if(i==threadNumber-1)max=size;
 			Thread a = new Thread(new threadReader(i,text,min,max));
 			a.start();
+			array[i]=a;
+		}
+		for(Thread is:array){
 			try {
-				a.join();
+				is.join();
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
-				a.interrupt();
+				is.interrupt();
 			}
 		}
 		for(String jsonPart : str){
