@@ -308,7 +308,7 @@ public static List<Polygon> useNearestNeighborTypification(STRtree tree, Envelop
 			 Polygon b = (Polygon) nearest[1];
 			 double distance = a.distance(b);
 			 double distanceTolerance = distTol * scale / 100000; //0.0005
-			 if (distanceTolerance>distance){
+			 if (distanceTolerance<distance){
 				 System.out.println("max union tolerance reached.");
 				 break;
 			 }
